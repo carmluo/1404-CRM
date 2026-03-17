@@ -237,19 +237,6 @@ The skill enforces a strict, step-by-step process every time a component is buil
 
 8. **Wire into consuming pages** — imports the new component into every page that renders the equivalent UI, replaces inline implementations, and removes unused imports.
 
-### Output checklist
+### Step 9 Planning out underdefined features
 
-Every component goes through this before being marked done:
-
-- All pixel values match Figma exactly
-- All colors use token classes, not raw hex
-- All interactive states implemented
-- Figma annotations implemented as interactions
-- No duplicate component created
-- Consuming pages updated
-- No unused imports left behind
-- Responsive: no fixed-width overflow at sm/md/lg breakpoints
-
-### Notifications
-
-The skill plays a system sound (`afplay /System/Library/Sounds/Blow.aiff`) in two situations: when user input is needed (blocked on a missing atom or unknown hover state), and when the output checklist is fully passed.
+There were two flows to plan out with Claude: notes and sending an estimate. They both required additional screens/interactions that were yet to flesh out from prioritizing
