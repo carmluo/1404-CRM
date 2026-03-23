@@ -110,6 +110,7 @@ export default function OpportunityDetail() {
                   closeDate: localOpp.closeDate || '',
                   projectStart: localOpp.projectStart || '',
                 })
+                // dealProbability will auto-update when stage changes
                 setIsEditing(true)
               }}
             >

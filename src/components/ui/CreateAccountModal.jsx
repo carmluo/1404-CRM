@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Plus, Globe, Sparkles, Loader2, Check } from 'lucide-react'
-import { accounts } from '../../data/mockData'
+import { motion } from 'framer-motion'
+import { ChevronDown, Globe, Sparkles, Loader2, Check } from 'lucide-react'
 
 const REPS = ['Marcus Reynolds', 'Sarah Kim']
-
 const ACCOUNT_TYPES = ['General Contractor', 'Retail', 'Franchise', 'Corporate', 'Distributor', 'Other']
 const STATUSES = ['Active', 'Prospect', 'At Risk', 'Inactive']
 const INDUSTRIES = ['Retail', 'Construction', 'Hospitality', 'Healthcare', 'Food & Beverage', 'Automotive', 'Education', 'Government', 'Technology', 'Other']
 
-// Simulate web-lookup results per keyword patterns
 function simulateLookup(name) {
   const n = name.toLowerCase()
   if (n.includes('home') || n.includes('depot') || n.includes('hardware')) {
@@ -23,7 +21,6 @@ function simulateLookup(name) {
   if (n.includes('walmart')) {
     return { industry: 'Retail', annualRevenue: '611000000000', overview: 'An American multinational retail corporation operating a chain of hypermarkets, discount department stores, and grocery stores.', address: '702 SW 8th St, Bentonville, AR 72716' }
   }
-  // Generic fallback
   return {
     industry: 'Retail',
     annualRevenue: '25000000',
@@ -32,11 +29,40 @@ function simulateLookup(name) {
   }
 }
 
+const inputCls = 'w-full bg-surface-white border border-border rounded-[4px] px-[12px] py-[10px] font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary transition-colors'
+
+function Field({ label, required, error, children }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="font-crm text-body-2 text-content">
+        {label}
+        {required && <span className="text-danger-text ml-0.5">*</span>}
+      </p>
+      {children}
+      {error && <p className="font-crm text-body-3 text-danger-text">{error}</p>}
+    </div>
+  )
+}
+
+function SelectField({ value, onChange, children }) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={onChange}
+        className={`${inputCls} appearance-none pr-10`}
+      >
+        {children}
+      </select>
+      <ChevronDown size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-content-disabled pointer-events-none" />
+    </div>
+  )
+}
+
 function OwnerCombobox({ value, onChange }) {
   const [inputVal, setInputVal] = useState(value || '')
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
-
   const filtered = REPS.filter(r => r.toLowerCase().includes(inputVal.toLowerCase()))
 
   useEffect(() => {
@@ -61,23 +87,34 @@ function OwnerCombobox({ value, onChange }) {
         onChange={e => { setInputVal(e.target.value); onChange(e.target.value); setOpen(true) }}
         onFocus={() => setOpen(true)}
         placeholder="Search reps..."
-        className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
+        className={inputCls}
       />
       {open && filtered.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#e5e5e5] rounded-lg shadow-lg z-10 overflow-hidden">
+        <div className="absolute left-0 right-0 top-full mt-1 bg-surface-white border border-border rounded-[4px] shadow-card z-10 overflow-hidden">
           {filtered.map(rep => (
             <button
               key={rep}
+              type="button"
               onMouseDown={() => select(rep)}
-              className="w-full text-left px-3 py-2 text-sm text-[#21272a] hover:bg-[#f4f4f4] flex items-center justify-between"
+              className="w-full text-left px-[12px] py-[10px] font-crm text-body-3 text-content hover:bg-surface flex items-center justify-between"
             >
               {rep}
-              {value === rep && <Check size={13} className="text-[#2B6B52]" />}
+              {value === rep && <Check size={13} className="text-content-primary" />}
             </button>
           ))}
         </div>
       )}
     </div>
+  )
+}
+
+function AutoBadge({ show }) {
+  if (!show) return null
+  return (
+    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-[4px] font-crm text-[10px] font-bold ml-1.5 bg-brand text-content-primary">
+      <Sparkles size={9} />
+      Auto-filled
+    </span>
   )
 }
 
@@ -94,7 +131,7 @@ export default function CreateAccountModal({ isOpen, onClose, onAdd }) {
     overview: '',
   })
   const [errors, setErrors] = useState({})
-  const [lookupState, setLookupState] = useState('idle') // idle | loading | done
+  const [lookupState, setLookupState] = useState('idle')
   const [autoFilledFields, setAutoFilledFields] = useState([])
 
   if (!isOpen) return null
@@ -102,7 +139,6 @@ export default function CreateAccountModal({ isOpen, onClose, onAdd }) {
   function handleChange(field, value) {
     setForm(prev => ({ ...prev, [field]: value }))
     setErrors(prev => ({ ...prev, [field]: '' }))
-    // Reset autofill badge if user manually edits an auto-filled field
     if (autoFilledFields.includes(field)) {
       setAutoFilledFields(prev => prev.filter(f => f !== field))
     }
@@ -120,7 +156,7 @@ export default function CreateAccountModal({ isOpen, onClose, onAdd }) {
         overview: result.overview || prev.overview,
         address: result.address || prev.address,
       }))
-      setAutoFilledFields(['industry', 'annualRevenue', 'overview', 'address'].filter(f => !!simulateLookup(form.name)[f === 'annualRevenue' ? 'annualRevenue' : f]))
+      setAutoFilledFields(['industry', 'annualRevenue', 'overview', 'address'].filter(f => !!result[f === 'annualRevenue' ? 'annualRevenue' : f]))
       setLookupState('done')
     }, 1600)
   }
@@ -134,7 +170,7 @@ export default function CreateAccountModal({ isOpen, onClose, onAdd }) {
 
   function handleSubmit() {
     if (!validate()) return
-    const newAccount = {
+    onAdd({
       id: `acc-new-${Date.now()}`,
       name: form.name,
       website: form.website,
@@ -150,8 +186,7 @@ export default function CreateAccountModal({ isOpen, onClose, onAdd }) {
       contacts: [],
       lastActivity: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString().split('T')[0],
-    }
-    onAdd(newAccount)
+    })
     onClose()
     resetForm()
   }
@@ -163,210 +198,167 @@ export default function CreateAccountModal({ isOpen, onClose, onAdd }) {
     setAutoFilledFields([])
   }
 
-  function AutoBadge({ field }) {
-    if (!autoFilledFields.includes(field)) return null
-    return (
-      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ml-1.5" style={{ backgroundColor: '#E8F5F0', color: '#2B6B52' }}>
-        <Sparkles size={9} />
-        Auto-filled
-      </span>
-    )
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { onClose(); resetForm() }} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-[520px] max-h-[90vh] overflow-y-auto z-51 flex flex-col">
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30" onClick={() => { onClose(); resetForm() }} />
+      <motion.div
+        className="relative bg-surface-white rounded-card w-full max-w-[868px] max-h-[90vh] overflow-y-auto flex flex-col gap-6 pt-6 px-6 pb-8"
+        style={{ boxShadow: '0px 2px 4px 0px rgba(173,173,173,0.25), -2px 4px 12px 0px rgba(203,203,203,0.5)' }}
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.97 }}
+        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e5e5] shrink-0">
-          <div className="flex items-center gap-2">
-            <Plus size={18} className="text-[#2B6B52]" />
-            <h2 className="font-semibold text-[#21272a]">New Account</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-crm text-h6 font-bold text-content">Create new account</h2>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => { onClose(); resetForm() }}
+              className="h-10 px-3 py-2 rounded-[12px] font-crm text-body-3 font-bold text-content-primary hover:bg-surface transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="h-10 px-3 py-2 rounded-[12px] font-crm text-body-3 font-bold bg-brand-action text-content-invert hover:bg-brand-action-hover transition-colors"
+            >
+              Create account
+            </button>
           </div>
-          <button onClick={() => { onClose(); resetForm() }} className="p-1.5 rounded-lg hover:bg-gray-100 text-[#838383]">
-            <X size={16} />
-          </button>
         </div>
 
-        {/* Form */}
-        <div className="px-6 py-5 flex flex-col gap-4">
+        {/* Form — 2-column grid */}
+        <div className="grid grid-cols-2 gap-6">
 
           {/* Company name */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">
-              Company name <span className="text-red-500">*</span>
-            </label>
+          <Field label="Company name" required error={errors.name}>
             <input
               type="text"
               value={form.name}
               onChange={e => handleChange('name', e.target.value)}
               placeholder="e.g. Acme Corp"
-              className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:border-[#2B6B52] ${errors.name ? 'border-red-400' : 'border-[#dde1e6]'}`}
+              className={`${inputCls} ${errors.name ? 'border-danger-border' : ''}`}
             />
-            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
-          </div>
+          </Field>
 
-          {/* Web lookup prompt */}
+          {/* Website */}
+          <Field label="Website">
+            <input
+              type="url"
+              value={form.website}
+              onChange={e => handleChange('website', e.target.value)}
+              placeholder="https://example.com"
+              className={inputCls}
+            />
+          </Field>
+
+          {/* Web lookup banner — spans full width when visible */}
           {form.name.trim().length > 2 && lookupState === 'idle' && (
             <div
-              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border"
-              style={{ backgroundColor: '#f0faf6', borderColor: '#b6ddd0' }}
+              className="col-span-2 flex items-center justify-between px-3.5 py-2.5 rounded-[8px] border border-border-primary bg-brand"
             >
               <div className="flex items-center gap-2">
-                <Sparkles size={14} style={{ color: '#2B6B52' }} />
-                <span className="text-xs text-[#2B6B52] font-medium">Auto-fill details from the web?</span>
+                <Sparkles size={14} className="text-content-primary" />
+                <span className="font-crm text-body-3 text-content-primary">Auto-fill details from the web?</span>
               </div>
               <button
+                type="button"
                 onClick={handleLookup}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-colors"
-                style={{ backgroundColor: '#2B6B52' }}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-[8px] font-crm text-body-3 font-bold text-content-invert bg-brand-action hover:bg-brand-action-hover transition-colors"
               >
-                <Globe size={11} />
+                <Globe size={12} />
                 Look up
               </button>
             </div>
           )}
 
           {lookupState === 'loading' && (
-            <div
-              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border"
-              style={{ backgroundColor: '#f0faf6', borderColor: '#b6ddd0' }}
-            >
-              <Loader2 size={14} className="animate-spin" style={{ color: '#2B6B52' }} />
-              <span className="text-xs text-[#2B6B52] font-medium">Looking up "{form.name}"…</span>
+            <div className="col-span-2 flex items-center gap-2.5 px-3.5 py-2.5 rounded-[8px] border border-border-primary bg-brand">
+              <Loader2 size={14} className="animate-spin text-content-primary" />
+              <span className="font-crm text-body-3 text-content-primary">Looking up "{form.name}"…</span>
             </div>
           )}
 
           {lookupState === 'done' && (
-            <div
-              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border"
-              style={{ backgroundColor: '#f0faf6', borderColor: '#b6ddd0' }}
-            >
-              <Check size={14} style={{ color: '#2B6B52' }} />
-              <span className="text-xs text-[#2B6B52] font-medium">Details auto-filled from the web</span>
+            <div className="col-span-2 flex items-center gap-2.5 px-3.5 py-2.5 rounded-[8px] border border-border-primary bg-brand">
+              <Check size={14} className="text-content-primary" />
+              <span className="font-crm text-body-3 text-content-primary">Details auto-filled from the web</span>
             </div>
           )}
 
-          {/* Website */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">Website</label>
+          {/* Type */}
+          <Field label="Type">
+            <SelectField value={form.type} onChange={e => handleChange('type', e.target.value)}>
+              <option value="">Select type</option>
+              {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </SelectField>
+          </Field>
+
+          {/* Status */}
+          <Field label="Status">
+            <SelectField value={form.status} onChange={e => handleChange('status', e.target.value)}>
+              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </SelectField>
+          </Field>
+
+          {/* Industry */}
+          <Field label={<>Industry<AutoBadge show={autoFilledFields.includes('industry')} /></>}>
+            <SelectField value={form.industry} onChange={e => handleChange('industry', e.target.value)}>
+              <option value="">Select industry</option>
+              {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+            </SelectField>
+          </Field>
+
+          {/* Annual revenue */}
+          <Field label={<>Annual revenue ($)<AutoBadge show={autoFilledFields.includes('annualRevenue')} /></>}>
             <input
-              type="url"
-              value={form.website}
-              onChange={e => handleChange('website', e.target.value)}
-              placeholder="https://example.com"
-              className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
+              type="number"
+              value={form.annualRevenue}
+              onChange={e => handleChange('annualRevenue', e.target.value)}
+              placeholder="0"
+              className={inputCls}
             />
-          </div>
+          </Field>
 
-          {/* Type + Status */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-[#21272a] mb-1.5">Type</label>
-              <select
-                value={form.type}
-                onChange={e => handleChange('type', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52] bg-white"
-              >
-                <option value="">Select type</option>
-                {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#21272a] mb-1.5">Status</label>
-              <select
-                value={form.status}
-                onChange={e => handleChange('status', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52] bg-white"
-              >
-                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Industry + Revenue */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-[#21272a] mb-1.5">
-                Industry <AutoBadge field="industry" />
-              </label>
-              <select
-                value={form.industry}
-                onChange={e => handleChange('industry', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52] bg-white"
-              >
-                <option value="">Select industry</option>
-                {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#21272a] mb-1.5">
-                Annual revenue ($) <AutoBadge field="annualRevenue" />
-              </label>
-              <input
-                type="number"
-                value={form.annualRevenue}
-                onChange={e => handleChange('annualRevenue', e.target.value)}
-                placeholder="0"
-                className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
-              />
-            </div>
-          </div>
-
-          {/* Address */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">
-              Address <AutoBadge field="address" />
-            </label>
+          {/* Address — full width */}
+          <div className="col-span-2 flex flex-col gap-1">
+            <p className="font-crm text-body-2 text-content">
+              Address<AutoBadge show={autoFilledFields.includes('address')} />
+            </p>
             <input
               type="text"
               value={form.address}
               onChange={e => handleChange('address', e.target.value)}
               placeholder="123 Main St, City, ST 00000"
-              className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
+              className={inputCls}
             />
           </div>
 
-          {/* Overview */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">
-              Company overview <AutoBadge field="overview" />
-            </label>
+          {/* Company overview — full width */}
+          <div className="col-span-2 flex flex-col gap-1">
+            <p className="font-crm text-body-2 text-content">
+              Company overview<AutoBadge show={autoFilledFields.includes('overview')} />
+            </p>
             <textarea
               value={form.overview}
               onChange={e => handleChange('overview', e.target.value)}
               rows={3}
               placeholder="Brief description of the company…"
-              className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52] resize-none"
+              className={`${inputCls} resize-none`}
             />
           </div>
 
-          {/* Account Owner */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">Account owner</label>
+          {/* Account owner */}
+          <Field label="Account owner">
             <OwnerCombobox value={form.accountOwner} onChange={v => handleChange('accountOwner', v)} />
-          </div>
-        </div>
+          </Field>
+          <div />
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-[#e5e5e5] flex gap-3 shrink-0">
-          <button
-            onClick={() => { onClose(); resetForm() }}
-            className="flex-1 py-2.5 rounded-lg border border-[#e5e5e5] text-sm text-[#565656] font-medium hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="flex-1 py-2.5 rounded-lg text-sm text-white font-medium transition-colors flex items-center justify-center gap-2"
-            style={{ backgroundColor: '#2B6B52' }}
-          >
-            <Plus size={16} />
-            Create Account
-          </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

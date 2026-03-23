@@ -25,7 +25,7 @@ function CustomTooltip({ active, payload }) {
   )
 }
 
-export default function TopAccountsCard({ accounts }) {
+export default function TopAccountsCard({ accounts, onAccountClick }) {
   const navigate = useNavigate()
 
   const sorted = [...accounts].sort((a, b) => b.revenue - a.revenue)
@@ -103,7 +103,7 @@ export default function TopAccountsCard({ accounts }) {
                   </g>
                 )
               }}
-              onClick={(data) => navigate(`/accounts/${data.accountId}`)}
+              onClick={(data) => onAccountClick ? onAccountClick(data.accountId) : navigate(`/accounts/${data.accountId}`)}
               cursor="pointer"
             >
               <LabelList

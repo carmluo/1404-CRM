@@ -100,7 +100,7 @@ function ActivityEntry({ activity, isLast }) {
       {/* Main row */}
       <div className="flex gap-[12px] items-center">
         <ActivityIcon type={activity.type} />
-        <p className="font-crm text-body-3 text-content whitespace-nowrap flex-1 min-w-0 truncate">
+        <p className="font-crm text-body-3 text-content flex-1 min-w-0">
           {activity.bold ? (
             <>
               {activity.description.slice(0, activity.description.indexOf(activity.bold))}

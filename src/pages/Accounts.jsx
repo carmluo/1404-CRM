@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { differenceInDays, parseISO } from 'date-fns'
@@ -25,6 +26,7 @@ function getCommStrength(account) {
 const PAGE_SIZE = 10
 
 export default function Accounts() {
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [sortKey, setSortKey] = useState('name')
@@ -122,6 +124,7 @@ export default function Accounts() {
           <AccountDrawer
             account={selectedAccount}
             onClose={() => setSelectedAccount(null)}
+            onViewDetail={acc => { navigate(`/accounts/${acc.id}`); setSelectedAccount(null) }}
           />
         )}
       </AnimatePresence>

@@ -55,11 +55,10 @@ export default function OpportunityDrawer({ opp, onClose }) {
 
       {/* Drawer */}
       <motion.div
-        className="fixed right-0 bottom-0 w-96 bg-surface-white border-l border-border shadow-2xl z-50 flex flex-col overflow-hidden"
-        style={{ top: 64 }}
-        initial={{ x: 384 }}
+        className="fixed right-0 inset-y-0 w-[35vw] bg-surface-white border-l border-border shadow-2xl z-50 flex flex-col overflow-hidden"
+        initial={{ x: '100%' }}
         animate={{ x: 0 }}
-        exit={{ x: 384 }}
+        exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       >
         <div className="flex flex-col gap-4 px-[9px] py-[14px] h-full min-h-0">

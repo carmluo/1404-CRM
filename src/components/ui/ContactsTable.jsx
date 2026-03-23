@@ -16,8 +16,8 @@ function SortArrow({ col, sortKey, sortDir }) {
 }
 
 // Shared grid template — 7 columns
-// Name(350px) | Account | Last contacted | Location | Preferred | Actions | Account owner(110px)
-const COLS = 'grid grid-cols-[350px_repeat(5,140px)_110px] gap-x-4'
+// Name(310px) | Account(200px) | Last contacted | Location | Preferred | Actions(88px) | Account owner(110px)
+const COLS = 'grid grid-cols-[310px_200px_140px_140px_140px_88px_110px] gap-x-4'
 
 export default function ContactsTable({
   contacts = [],
@@ -38,7 +38,7 @@ export default function ContactsTable({
 
   return (
     <div className="w-full rounded-[8px] overflow-hidden bg-surface-elevated shadow-card overflow-x-auto">
-      <div className="min-w-[1100px]">
+      <div className="min-w-[1300px]">
 
         {/* ── Header ── */}
         <div className={`${COLS} border-b border-border px-[16px] py-[12px] min-h-[67px] items-center w-full`}>

@@ -14,6 +14,14 @@ import { format, parseISO } from 'date-fns'
 
 
 const STAGES = ['Qualifying', 'Needs Analysis', 'Estimate Prep', 'Estimate Submitted', 'Negotiation', 'Verbal Commit']
+const STAGE_PROBABILITY = {
+  'Qualifying': 20,
+  'Needs Analysis': 35,
+  'Estimate Prep': 50,
+  'Estimate Submitted': 60,
+  'Negotiation': 75,
+  'Verbal Commit': 90,
+}
 const PROB_PILLS = 7
 
 function ProbabilityBar({ value }) {
@@ -128,7 +136,10 @@ export default function OpportunityHeader({
           {isEditing ? (
             <select
               value={draft.stage}
-              onChange={e => onDraftChange({ stage: e.target.value })}
+              onChange={e => {
+                const s = e.target.value
+                onDraftChange({ stage: s, dealProbability: STAGE_PROBABILITY[s] ?? draft.dealProbability })
+              }}
               className="border border-border-input rounded-card px-[8px] py-[4px] font-crm text-body-3 text-content focus:outline-none focus:border-border-primary"
             >
               {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -145,26 +156,14 @@ export default function OpportunityHeader({
 
         <Divider />
 
-        {/* Deal probability */}
+        {/* Deal probability — auto-derived from stage, never manually editable */}
         <StatCol label="Deal probability">
-          {isEditing ? (
-            <div className="flex items-center gap-[4px]">
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={draft.dealProbability}
-                onChange={e => onDraftChange({ dealProbability: Number(e.target.value) })}
-                className="border border-border-input rounded-card px-[8px] py-[4px] font-crm text-body-3 text-content focus:outline-none focus:border-border-primary w-[72px]"
-              />
-              <span className="font-crm text-body-3 text-content-subtlest">%</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-[8px]">
-              <ProbabilityBar value={dealProbability} />
-              <p className="font-crm text-body-2 font-bold text-content">{dealProbability}%</p>
-            </div>
-          )}
+          <div className="flex items-center gap-[8px]">
+            <ProbabilityBar value={isEditing ? (draft.dealProbability ?? dealProbability) : dealProbability} />
+            <p className="font-crm text-body-2 font-bold text-content">
+              {isEditing ? (draft.dealProbability ?? dealProbability) : dealProbability}%
+            </p>
+          </div>
         </StatCol>
 
         <Divider />

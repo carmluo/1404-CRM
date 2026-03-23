@@ -1,16 +1,40 @@
-import React, { useState } from 'react'
-import { X, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { ChevronDown } from 'lucide-react'
 import { accounts, contacts } from '../../data/mockData'
 import { useApp } from '../../context/AppContext'
 
 const STAGES = ['Qualifying', 'Needs Analysis', 'Estimate Prep', 'Estimate Submitted', 'Negotiation', 'Verbal Commit']
-const STAGE_COLORS = {
-  'Qualifying': '#5BBFA0',
-  'Needs Analysis': '#9C59C5',
-  'Estimate Prep': '#4A8FE0',
-  'Estimate Submitted': '#F5A623',
-  'Negotiation': '#8A9D35',
-  'Verbal Commit': '#7B5EA7',
+
+const inputCls = 'w-full bg-surface-white border border-border rounded-[4px] px-[12px] py-[10px] font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary transition-colors'
+
+function Field({ label, required, hint, error, children }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="font-crm text-body-2 text-content">
+        {label}
+        {required && <span className="text-danger-text ml-0.5">*</span>}
+        {hint && <span className="font-crm text-body-3 text-content-subtlest ml-1">{hint}</span>}
+      </p>
+      {children}
+      {error && <p className="font-crm text-body-3 text-danger-text">{error}</p>}
+    </div>
+  )
+}
+
+function SelectField({ value, onChange, error, children }) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={onChange}
+        className={`${inputCls} appearance-none pr-10 ${error ? 'border-danger-border' : ''}`}
+      >
+        {children}
+      </select>
+      <ChevronDown size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-content-disabled pointer-events-none" />
+    </div>
+  )
 }
 
 export default function CreateOpportunityModal({ isOpen, onClose }) {
@@ -24,6 +48,7 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
     closeDate: '',
     projectStart: '',
     dealProbability: 20,
+    notes: '',
   })
   const [errors, setErrors] = useState({})
 
@@ -45,7 +70,6 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
   function validate() {
     const errs = {}
     if (!form.title.trim()) errs.title = 'Title is required'
-    if (!form.accountId) errs.accountId = 'Account is required'
     if (!form.stage) errs.stage = 'Stage is required'
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -53,11 +77,9 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
 
   function handleSubmit() {
     if (!validate()) return
-
     const account = accounts.find(a => a.id === form.accountId)
     const contact = contacts.find(c => c.id === form.contactId)
-
-    const newOpp = {
+    addOpportunity({
       id: `opp-${Date.now()}`,
       title: form.title,
       account: account?.name || '',
@@ -69,114 +91,95 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
       dealProbability: parseInt(form.dealProbability) || 20,
       closeDate: form.closeDate,
       projectStart: form.projectStart,
+      notes: form.notes,
       stageEntryDate: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0],
       status: 'active',
-      notes: '',
       bids: [],
       biddingHistory: [],
       activities: { upcoming: [], log: [] },
       documents: [],
       estimates: [],
-    }
-
-    addOpportunity(newOpp)
-    onClose()
-    setForm({
-      title: '',
-      accountId: '',
-      contactId: '',
-      stage: 'Qualifying',
-      amount: '',
-      closeDate: '',
-      projectStart: '',
-      dealProbability: 20,
     })
+    onClose()
+    setForm({ title: '', accountId: '', contactId: '', stage: 'Qualifying', amount: '', closeDate: '', projectStart: '', dealProbability: 20, notes: '' })
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-[480px] max-h-[90vh] overflow-y-auto z-51 flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <motion.div
+        className="relative bg-surface-white rounded-card w-full max-w-[868px] max-h-[90vh] overflow-y-auto flex flex-col gap-6 pt-6 px-6 pb-8"
+        style={{ boxShadow: '0px 2px 4px 0px rgba(173,173,173,0.25), -2px 4px 12px 0px rgba(203,203,203,0.5)' }}
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.97 }}
+        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e5e5]">
-          <div className="flex items-center gap-2">
-            <Plus size={18} className="text-[#2B6B52]" />
-            <h2 className="font-semibold text-[#21272a]">New Opportunity</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-crm text-h6 font-bold text-content">Create new opportunity</h2>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onClose}
+              className="h-10 px-3 py-2 rounded-[12px] font-crm text-body-3 font-bold text-content-primary hover:bg-surface transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="h-10 px-3 py-2 rounded-[12px] font-crm text-body-3 font-bold bg-brand-action text-content-invert hover:bg-brand-action-hover transition-colors"
+            >
+              Create opportunity
+            </button>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-[#838383]">
-            <X size={16} />
-          </button>
         </div>
 
-        {/* Form */}
-        <div className="px-6 py-5 flex flex-col gap-4">
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">
-              Title <span className="text-red-500">*</span>
-            </label>
+        {/* Form — 2-column grid */}
+        <div className="grid grid-cols-2 gap-6">
+
+          {/* Opportunity title */}
+          <Field label="Opportunity title" required error={errors.title}>
             <input
               type="text"
               value={form.title}
               onChange={e => handleChange('title', e.target.value)}
-              placeholder="e.g. Kitchen Remodel — Store #1842"
-              className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:border-[#2B6B52] ${
-                errors.title ? 'border-red-400' : 'border-[#dde1e6]'
-              }`}
+              placeholder="eg. Kitchen Remodel — Store #1842"
+              className={`${inputCls} ${errors.title ? 'border-danger-border' : ''}`}
             />
-            {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
-          </div>
+          </Field>
+          <div />
 
-          {/* Account */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">
-              Account <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={form.accountId}
-              onChange={e => handleChange('accountId', e.target.value)}
-              className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:border-[#2B6B52] bg-white ${
-                errors.accountId ? 'border-red-400' : 'border-[#dde1e6]'
-              }`}
-            >
-              <option value="">Select account</option>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-            {errors.accountId && <p className="text-xs text-red-500 mt-1">{errors.accountId}</p>}
-          </div>
+          {/* Amount */}
+          <Field label="Amount ($)">
+            <input
+              type="number"
+              value={form.amount}
+              onChange={e => handleChange('amount', e.target.value)}
+              placeholder="0"
+              className={inputCls}
+            />
+          </Field>
+          <div />
 
-          {/* Contact */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">Contact</label>
-            <select
-              value={form.contactId}
-              onChange={e => handleChange('contactId', e.target.value)}
-              disabled={!form.accountId}
-              className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52] bg-white disabled:opacity-50"
-            >
-              <option value="">Select contact</option>
-              {filteredContacts.map(c => <option key={c.id} value={c.id}>{c.name} — {c.title}</option>)}
-            </select>
-          </div>
-
-          {/* Stage */}
-          <div>
-            <label className="block text-sm font-medium text-[#21272a] mb-1.5">
-              Stage <span className="text-red-500">*</span>
-            </label>
+          {/* Stage — full width */}
+          <div className="col-span-2 flex flex-col gap-2">
+            <p className="font-crm text-body-2 text-content">
+              Stage<span className="text-danger-text ml-0.5">*</span>
+              {errors.stage && <span className="font-crm text-body-3 text-danger-text ml-2">{errors.stage}</span>}
+            </p>
             <div className="flex flex-wrap gap-2">
               {STAGES.map(s => (
                 <button
                   key={s}
+                  type="button"
                   onClick={() => handleChange('stage', s)}
-                  className="px-2.5 py-1 rounded-full text-xs font-medium border transition-all"
-                  style={{
-                    backgroundColor: form.stage === s ? STAGE_COLORS[s] : 'white',
-                    color: form.stage === s ? 'white' : '#565656',
-                    borderColor: form.stage === s ? STAGE_COLORS[s] : '#e5e5e5',
-                  }}
+                  className={`pl-[10px] pr-3 py-[4px] rounded-[100px] font-crm text-body-3 transition-colors ${
+                    form.stage === s
+                      ? 'bg-viz-dark text-content-invert'
+                      : 'border border-border text-content-subtlest hover:border-border-hover'
+                  }`}
                 >
                   {s}
                 </button>
@@ -184,72 +187,56 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Amount & Probability */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-[#21272a] mb-1.5">Amount ($)</label>
-              <input
-                type="number"
-                value={form.amount}
-                onChange={e => handleChange('amount', e.target.value)}
-                placeholder="0"
-                className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#21272a] mb-1.5">Deal Probability (%)</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={form.dealProbability}
-                onChange={e => handleChange('dealProbability', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
-              />
-            </div>
-          </div>
+          {/* Account */}
+          <Field label="Account" hint="(if new account is entered, it will update in directory)">
+            <SelectField value={form.accountId} onChange={e => handleChange('accountId', e.target.value)}>
+              <option value="">Select or type account name</option>
+              {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </SelectField>
+          </Field>
 
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-[#21272a] mb-1.5">Close Date</label>
-              <input
-                type="date"
-                value={form.closeDate}
-                onChange={e => handleChange('closeDate', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#21272a] mb-1.5">Project Start</label>
-              <input
-                type="date"
-                value={form.projectStart}
-                onChange={e => handleChange('projectStart', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
-              />
-            </div>
-          </div>
-        </div>
+          {/* Contact */}
+          <Field label="Contact" hint="(if new contact is entered, it will update in directory)">
+            <SelectField value={form.contactId} onChange={e => handleChange('contactId', e.target.value)}>
+              <option value="">Select or type contact name</option>
+              {filteredContacts.map(c => <option key={c.id} value={c.id}>{c.name}{c.title ? ` — ${c.title}` : ''}</option>)}
+            </SelectField>
+          </Field>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-[#e5e5e5] flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-lg border border-[#e5e5e5] text-sm text-[#565656] font-medium hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="flex-1 py-2.5 rounded-lg text-sm text-white font-medium transition-colors flex items-center justify-center gap-2"
-            style={{ backgroundColor: '#2B6B52' }}
-          >
-            <Plus size={16} />
-            Create Opportunity
-          </button>
+          {/* Close date */}
+          <Field label="Close date">
+            <input
+              type="date"
+              value={form.closeDate}
+              onChange={e => handleChange('closeDate', e.target.value)}
+              className={inputCls}
+            />
+          </Field>
+
+          {/* Project start */}
+          <Field label="Project start">
+            <input
+              type="date"
+              value={form.projectStart}
+              onChange={e => handleChange('projectStart', e.target.value)}
+              className={inputCls}
+            />
+          </Field>
+
+          {/* Notes */}
+          <Field label="Notes">
+            <input
+              type="text"
+              value={form.notes}
+              onChange={e => handleChange('notes', e.target.value)}
+              placeholder="Add additional notes"
+              className={inputCls}
+            />
+          </Field>
+          <div />
+
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

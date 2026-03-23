@@ -7,6 +7,7 @@ import { dashboardData } from '../data/mockData'
 import DatePicker from '../components/ui/DatePicker'
 import PhoneModal from '../components/ui/PhoneModal'
 import OpportunityDrawer from '../components/ui/OpportunityDrawer'
+import AccountDrawer from '../components/ui/AccountDrawer'
 import Tasklist from '../components/ui/Tasklist'
 import RecentOpportunities from '../components/ui/RecentOpportunities'
 import AtRiskCard from '../components/ui/AtRiskCard'
@@ -106,8 +107,14 @@ function FilterDropdown({ label, options, value, onChange }) {
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { completedTaskIds, completeTask, saveTaskForLater, opportunities } = useApp()
+  const { completedTaskIds, completeTask, saveTaskForLater, opportunities, accounts } = useApp()
   const [selectedOpp, setSelectedOpp] = useState(null)
+  const [selectedAccount, setSelectedAccount] = useState(null)
+
+  function openAccountDrawer(accountId) {
+    const acc = accounts.find(a => a.id === accountId)
+    if (acc) setSelectedAccount(acc)
+  }
 
   function openOppDrawer(id) {
     const opp = opportunities.find(o => o.id === id)
@@ -321,24 +328,30 @@ export default function Dashboard() {
             </div>
 
             {/* Table */}
-            <div className="rounded-[8px] w-full overflow-x-auto" style={{ backgroundColor: '#F2F2F2', paddingLeft: 8, paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
-              <table className="w-full border-collapse">
+            <div className="rounded-[8px] w-full" style={{ backgroundColor: '#F2F2F2', paddingLeft: 8, paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+              <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col />
+                  <col style={{ width: 100 }} />
+                  <col style={{ width: 95 }} />
+                  <col style={{ width: 85 }} />
+                </colgroup>
                 <thead>
                   <tr>
-                    <th className="text-left" style={{ paddingLeft: 16, paddingRight: 10, paddingTop: 10, paddingBottom: 10, borderBottom: '1px solid #e5e5e5' }}>
+                    <th className="text-left" style={{ paddingLeft: 16, paddingRight: 8, paddingTop: 10, paddingBottom: 10, borderBottom: '1px solid #e5e5e5', verticalAlign: 'bottom' }}>
                       <span className="font-crm font-medium uppercase" style={{ fontSize: 12, lineHeight: 1, color: '#838383' }}>Opportunity</span>
                     </th>
-                    <th className="text-right" style={{ padding: 10, borderBottom: '1px solid #e5e5e5' }}>
+                    <th className="text-left" style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 10, paddingBottom: 10, borderBottom: '1px solid #e5e5e5', verticalAlign: 'bottom' }}>
                       <span className="font-crm font-medium uppercase" style={{ fontSize: 12, lineHeight: 1, color: '#838383' }}>Contact</span>
                     </th>
-                    <th className="text-right" style={{ padding: 10, borderBottom: '1px solid #e5e5e5' }}>
-                      <span className="font-crm font-medium uppercase inline-flex items-center justify-end" style={{ fontSize: 12, lineHeight: 1, color: '#838383', gap: 4 }}>
+                    <th className="text-left" style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 10, paddingBottom: 10, borderBottom: '1px solid #e5e5e5', verticalAlign: 'bottom' }}>
+                      <span className="font-crm font-medium uppercase inline-flex items-center" style={{ fontSize: 12, lineHeight: 1, color: '#838383', gap: 4 }}>
                         <ArrowDownUp size={14} />
                         Overdue
                       </span>
                     </th>
-                    <th className="text-right" style={{ padding: 10, borderBottom: '1px solid #e5e5e5' }}>
-                      <span className="font-crm font-medium uppercase inline-flex items-center justify-end" style={{ fontSize: 12, lineHeight: 1, color: '#838383', gap: 4 }}>
+                    <th className="text-left" style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 10, paddingBottom: 10, borderBottom: '1px solid #e5e5e5', verticalAlign: 'bottom' }}>
+                      <span className="font-crm font-medium uppercase inline-flex items-center" style={{ fontSize: 12, lineHeight: 1, color: '#838383', gap: 4 }}>
                         <ArrowDownUp size={14} />
                         Amount
                       </span>
@@ -353,23 +366,23 @@ export default function Dashboard() {
                       style={{ borderBottom: i < overdueFollowUps.length - 1 ? '1px solid #e5e5e5' : 'none' }}
                       onClick={() => openOppDrawer(item.id)}
                     >
-                      <td style={{ paddingLeft: 16, paddingRight: 10, paddingTop: 12, paddingBottom: 12 }}>
-                        <span className="font-crm whitespace-nowrap overflow-hidden text-ellipsis block" style={{ fontSize: 14, lineHeight: '21px', color: '#414141', maxWidth: 191 }}>
+                      <td style={{ paddingLeft: 16, paddingRight: 8, paddingTop: 12, paddingBottom: 12 }}>
+                        <span className="font-crm block overflow-hidden text-ellipsis whitespace-nowrap" style={{ fontSize: 14, lineHeight: '21px', color: '#414141' }}>
                           {item.opportunity}
                         </span>
                       </td>
-                      <td className="text-right" style={{ paddingLeft: 10, paddingRight: 10, paddingTop: 12, paddingBottom: 12 }}>
-                        <span className="font-crm whitespace-nowrap overflow-hidden text-ellipsis block" style={{ fontSize: 14, lineHeight: '21px', color: '#414141', maxWidth: 62, marginLeft: 'auto' }}>
+                      <td style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 12, paddingBottom: 12 }}>
+                        <span className="font-crm block overflow-hidden text-ellipsis whitespace-nowrap" style={{ fontSize: 14, lineHeight: '21px', color: '#414141' }}>
                           {item.contact}
                         </span>
                       </td>
-                      <td className="text-right" style={{ paddingLeft: 10, paddingRight: 10, paddingTop: 12, paddingBottom: 12 }}>
-                        <span className="font-crm font-bold whitespace-nowrap" style={{ fontSize: 14, lineHeight: '21px', color: '#565656' }}>
+                      <td style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 12, paddingBottom: 12, whiteSpace: 'nowrap' }}>
+                        <span className="font-crm font-bold" style={{ fontSize: 14, lineHeight: '21px', color: '#565656' }}>
                           {item.overdue}
                         </span>
                       </td>
-                      <td className="text-right" style={{ paddingLeft: 10, paddingRight: 10, paddingTop: 12, paddingBottom: 12 }}>
-                        <span className="font-crm whitespace-nowrap overflow-hidden text-ellipsis block" style={{ fontSize: 14, lineHeight: '21px', color: '#414141', maxWidth: 62, marginLeft: 'auto' }}>
+                      <td style={{ paddingLeft: 8, paddingRight: 8, paddingTop: 12, paddingBottom: 12, whiteSpace: 'nowrap' }}>
+                        <span className="font-crm" style={{ fontSize: 14, lineHeight: '21px', color: '#414141' }}>
                           {formatCurrency(item.amount)}
                         </span>
                       </td>
@@ -395,7 +408,7 @@ export default function Dashboard() {
           <BidWonLostCard data={bidWonLostRatio} />
 
           {/* Row 2, col 2 — Top 10 Accounts — Figma node 1001:4460 */}
-          <TopAccountsCard accounts={top10Accounts} />
+          <TopAccountsCard accounts={top10Accounts} onAccountClick={openAccountDrawer} />
 
           {/* Row 3, col 1 — Recent Opportunities — Figma node 519:75735 */}
           <RecentOpportunities
@@ -424,6 +437,16 @@ export default function Dashboard() {
           <OpportunityDrawer
             opp={selectedOpp}
             onClose={() => setSelectedOpp(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedAccount && (
+          <AccountDrawer
+            account={selectedAccount}
+            onClose={() => setSelectedAccount(null)}
+            onViewDetail={acc => { navigate(`/accounts/${acc.id}`); setSelectedAccount(null) }}
           />
         )}
       </AnimatePresence>
