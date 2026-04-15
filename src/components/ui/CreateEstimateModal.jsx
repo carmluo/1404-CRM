@@ -1,5 +1,16 @@
+// Figma node 1478:17184 — create new estimate modal
+// Card: bg-surface-white rounded-card shadow-panel flex flex-col gap-[24px] pt-[24px] pb-[32px] px-[24px]
+// Header: flex items-center justify-between gap-[10px]
+//   Title: Heading/H6 bold flex-1
+//   Cancel btn: h-[40px] px-[12px] py-[8px] rounded-[12px] bg-surface-white, B3 bold text-content-primary
+//   Save btn:   h-[40px] px-[12px] py-[8px] rounded-[12px], B3 bold text-content-invert
+//     disabled → bg-brand-hover; enabled → bg-brand-action
+// Form: grid grid-cols-2 gap-x-[24px] gap-y-[24px]
+//   Estimate name / Amount: col-span-2 px-[12px], label B2 text-content, input h-[47px] rounded-badge px-[12px] py-[10px] + ChevronDown size-20
+//   Notes: col-span-2 (no extra px), label B2 + "(optional)" B3 text-disabled, textarea h-[122px] rounded-badge px-[12px] py-[10px]
+
 import { useState } from 'react'
-import { X, FileText } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 
 function toFileName(str) {
@@ -10,15 +21,21 @@ function toFileName(str) {
     .replace(/^_|_$/g, '')
 }
 
+function inputWrapCls(hasError) {
+  return `w-full h-[47px] flex items-center justify-between px-[12px] py-[10px] bg-surface-white border rounded-badge focus-within:border-border-primary transition-colors ${
+    hasError ? 'border-danger-border' : 'border-border'
+  }`
+}
+
 export default function CreateEstimateModal({
   isOpen,
   onClose,
-  oppId,       // single opp (OpportunityDetail)
-  oppTitle,    // single opp title
+  oppId,
+  oppTitle,
   accountName,
-  opps,        // array of { id, title } — shown when multiple opps exist (AccountDetail)
+  opps,
 }) {
-  const { addEstimate } = useApp()
+  const { addEstimate, showToast } = useApp()
 
   const [selectedOppId, setSelectedOppId] = useState('')
   const resolvedOppId = oppId || selectedOppId
@@ -31,6 +48,13 @@ export default function CreateEstimateModal({
   const [errors, setErrors] = useState({})
 
   if (!isOpen) return null
+
+  const isFormValid =
+    form.name.trim() !== '' &&
+    form.amount !== '' &&
+    !isNaN(Number(form.amount)) &&
+    Number(form.amount) > 0 &&
+    (!opps || resolvedOppId !== '')
 
   function set(field, value) {
     setForm(f => ({ ...f, [field]: value }))
@@ -57,6 +81,7 @@ export default function CreateEstimateModal({
       status: 'Drafted',
       notes: form.notes,
     })
+    showToast('Estimate created')
     handleClose()
   }
 
@@ -70,25 +95,37 @@ export default function CreateEstimateModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative bg-surface-white rounded-2xl shadow-2xl w-[480px] z-[51] flex flex-col">
+      <div className="relative bg-surface-white rounded-card shadow-[0px_2px_4px_0px_rgba(173,173,173,0.25),-2px_4px_12px_0px_rgba(203,203,203,0.5)] w-[480px] min-w-[45vw] z-[51] flex flex-col gap-[24px] pt-[24px] pb-[32px] px-[24px]">
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <FileText size={18} className="text-content-primary" />
-            <h2 className="font-crm text-body-2 font-bold text-content">New Estimate</h2>
+        {/* Header: title + buttons */}
+        <div className="flex items-center justify-between gap-[10px]">
+          <h2 className="flex-1 font-crm text-h6 font-bold text-content">Create new estimate</h2>
+          <div className="flex items-center gap-[16px] shrink-0">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="h-[40px] px-[12px] py-[8px] rounded-[12px] bg-surface-white font-crm text-body-3 font-bold text-content-primary whitespace-nowrap hover:bg-surface transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!isFormValid}
+              className={`h-[40px] px-[12px] py-[8px] rounded-[12px] font-crm text-body-3 font-bold text-content-invert whitespace-nowrap transition-colors ${
+                isFormValid
+                  ? 'bg-brand-action hover:bg-brand-action-hover'
+                  : 'bg-brand-hover cursor-not-allowed'
+              }`}
+            >
+              Save estimate
+            </button>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-1.5 rounded-card hover:bg-surface text-content-disabled transition-colors"
-          >
-            <X size={16} />
-          </button>
         </div>
 
-        {/* Context */}
+        {/* Context: account / opp name (shown when provided) */}
         {(accountName || oppTitle) && (
-          <div className="px-6 pt-4 flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap -mt-3">
             {accountName && (
               <span className="font-crm text-body-3 text-content-subtlest bg-surface px-[8px] py-[2px] rounded-badge shrink-0">
                 {accountName}
@@ -101,103 +138,83 @@ export default function CreateEstimateModal({
         )}
 
         {/* Form */}
-        <div className="px-6 py-5 flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-x-[24px] gap-y-[24px] w-full">
 
-          {/* Opportunity selector — shown only when multiple opps are passed */}
+          {/* Opportunity selector — shown only when multiple opps passed */}
           {opps && (
-            <div>
-              <label className="block font-crm text-body-3 font-bold text-content mb-1.5">
+            <div className="col-span-2 flex flex-col gap-[4px]">
+              <p className="font-crm text-body-2 text-content">
                 Opportunity <span className="text-danger-text">*</span>
-              </label>
-              <select
-                value={selectedOppId}
-                onChange={e => { setSelectedOppId(e.target.value); setErrors(er => ({ ...er, opp: '' })) }}
-                className={`w-full px-3 py-2 rounded-card border font-crm text-body-3 text-content focus:outline-none focus:border-border-primary transition-colors bg-surface-white ${
-                  errors.opp ? 'border-danger-border' : 'border-border-input'
-                }`}
-              >
-                <option value="">Select opportunity…</option>
-                {opps.map(o => (
-                  <option key={o.id} value={o.id}>{o.title}</option>
-                ))}
-              </select>
-              {errors.opp && (
-                <p className="font-crm text-body-3 text-danger-text mt-1">{errors.opp}</p>
-              )}
+              </p>
+              <div className={inputWrapCls(!!errors.opp)}>
+                <select
+                  value={selectedOppId}
+                  onChange={e => { setSelectedOppId(e.target.value); setErrors(er => ({ ...er, opp: '' })) }}
+                  className="flex-1 min-w-0 bg-transparent font-crm text-body-2 text-content focus:outline-none appearance-none"
+                >
+                  <option value="">Select opportunity…</option>
+                  {opps.map(o => (
+                    <option key={o.id} value={o.id}>{o.title}</option>
+                  ))}
+                </select>
+                <ChevronDown size={20} className="text-content-disabled shrink-0" />
+              </div>
+              {errors.opp && <p className="font-crm text-body-3 text-danger-text">{errors.opp}</p>}
             </div>
           )}
 
           {/* Estimate name */}
-          <div>
-            <label className="block font-crm text-body-3 font-bold text-content mb-1.5">
+          <div className="col-span-2 flex flex-col gap-[4px]">
+            <p className="font-crm text-body-2 text-content">
               Estimate name <span className="text-danger-text">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={e => set('name', e.target.value)}
-              placeholder={suggestedName}
-              className={`w-full px-3 py-2 rounded-card border font-crm text-body-3 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary transition-colors ${
-                errors.name ? 'border-danger-border' : 'border-border-input'
-              }`}
-            />
-            {errors.name && (
-              <p className="font-crm text-body-3 text-danger-text mt-1">{errors.name}</p>
-            )}
+            </p>
+            <div className={inputWrapCls(!!errors.name)}>
+              <input
+                type="text"
+                value={form.name}
+                onChange={e => set('name', e.target.value)}
+                placeholder={suggestedName}
+                className="flex-1 min-w-0 bg-transparent font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none"
+              />
+              <ChevronDown size={20} className="text-content-disabled shrink-0" />
+            </div>
+            {errors.name && <p className="font-crm text-body-3 text-danger-text">{errors.name}</p>}
           </div>
 
           {/* Amount */}
-          <div>
-            <label className="block font-crm text-body-3 font-bold text-content mb-1.5">
+          <div className="col-span-2 flex flex-col gap-[4px]">
+            <p className="font-crm text-body-2 text-content">
               Amount ($) <span className="text-danger-text">*</span>
-            </label>
-            <input
-              type="number"
-              value={form.amount}
-              onChange={e => set('amount', e.target.value)}
-              placeholder="0"
-              min="0"
-              className={`w-full px-3 py-2 rounded-card border font-crm text-body-3 text-content focus:outline-none focus:border-border-primary transition-colors ${
-                errors.amount ? 'border-danger-border' : 'border-border-input'
-              }`}
-            />
-            {errors.amount && (
-              <p className="font-crm text-body-3 text-danger-text mt-1">{errors.amount}</p>
-            )}
+            </p>
+            <div className={inputWrapCls(!!errors.amount)}>
+              <input
+                type="number"
+                value={form.amount}
+                onChange={e => set('amount', e.target.value)}
+                placeholder="0"
+                min="0"
+                className="flex-1 min-w-0 bg-transparent font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none"
+              />
+              <ChevronDown size={20} className="text-content-disabled shrink-0" />
+            </div>
+            {errors.amount && <p className="font-crm text-body-3 text-danger-text">{errors.amount}</p>}
           </div>
 
           {/* Notes */}
-          <div>
-            <label className="block font-crm text-body-3 font-bold text-content mb-1.5">
-              Notes <span className="font-normal text-content-disabled">(optional)</span>
-            </label>
+          <div className="col-span-2 flex flex-col gap-[4px]">
+            <p className="font-crm text-body-2 text-content">
+              Notes{' '}
+              <span className="font-crm text-body-3 text-content-disabled">(optional)</span>
+            </p>
             <textarea
               value={form.notes}
               onChange={e => set('notes', e.target.value)}
               placeholder="Scope notes, exclusions, assumptions..."
-              rows={3}
-              className="w-full px-3 py-2 rounded-card border border-border-input font-crm text-body-3 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary resize-none transition-colors"
+              className="h-[122px] w-full px-[12px] py-[10px] bg-surface-white border border-border rounded-badge font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary resize-none transition-colors"
             />
           </div>
 
         </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-border flex gap-3">
-          <button
-            onClick={handleClose}
-            className="flex-1 py-2.5 rounded-card border border-border font-crm text-body-3 text-content-subtlest hover:bg-surface transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="flex-1 py-2.5 rounded-card bg-brand-action font-crm text-body-3 font-bold text-content-invert hover:opacity-90 transition-opacity"
-          >
-            Save estimate
-          </button>
-        </div>
-
       </div>
     </div>
   )

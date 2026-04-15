@@ -6,11 +6,16 @@ import { useApp } from '../../context/AppContext'
 
 const STAGES = ['Qualifying', 'Needs Analysis', 'Estimate Prep', 'Estimate Submitted', 'Negotiation', 'Verbal Commit']
 
-const inputCls = 'w-full bg-surface-white border border-border rounded-[4px] px-[12px] py-[10px] font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary transition-colors'
+// Figma node 1068:38594 — new-opportunity-form
+// Container: pt-[24px] px-[24px] pb-[32px] gap-[24px] rounded-card bg-surface-white
+// Input: h-[47px] px-[12px] py-[10px] rounded-[4px] border-border body-2
+// Field wrapper: flex flex-col gap-[4px] px-[12px]
+// Create button disabled: bg-brand-hover; enabled: bg-brand-action
+const inputCls = 'w-full h-[47px] bg-surface-white border border-border rounded-[4px] px-[12px] py-[10px] font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary transition-colors'
 
 function Field({ label, required, hint, error, children }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 px-3">
       <p className="font-crm text-body-2 text-content">
         {label}
         {required && <span className="text-danger-text ml-0.5">*</span>}
@@ -38,7 +43,7 @@ function SelectField({ value, onChange, error, children }) {
 }
 
 export default function CreateOpportunityModal({ isOpen, onClose }) {
-  const { addOpportunity } = useApp()
+  const { addOpportunity, showToast } = useApp()
   const [form, setForm] = useState({
     title: '',
     accountId: '',
@@ -53,6 +58,8 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
   const [errors, setErrors] = useState({})
 
   if (!isOpen) return null
+
+  const isFormValid = form.title.trim() !== '' && form.stage !== ''
 
   const filteredContacts = form.accountId
     ? contacts.filter(c => c.accountId === form.accountId)
@@ -102,6 +109,7 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
       documents: [],
       estimates: [],
     })
+    showToast(`Added "${form.title}" opportunity`)
     onClose()
     setForm({ title: '', accountId: '', contactId: '', stage: 'Qualifying', amount: '', closeDate: '', projectStart: '', dealProbability: 20, notes: '' })
   }
@@ -129,7 +137,12 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
             </button>
             <button
               onClick={handleSubmit}
-              className="h-10 px-3 py-2 rounded-[12px] font-crm text-body-3 font-bold bg-brand-action text-content-invert hover:bg-brand-action-hover transition-colors"
+              disabled={!isFormValid}
+              className={`h-10 px-3 py-2 rounded-[12px] font-crm text-body-3 font-bold text-content-invert transition-colors ${
+                isFormValid
+                  ? 'bg-brand-action hover:bg-brand-action-hover cursor-pointer'
+                  : 'bg-brand-hover cursor-not-allowed'
+              }`}
             >
               Create opportunity
             </button>
@@ -164,7 +177,7 @@ export default function CreateOpportunityModal({ isOpen, onClose }) {
           <div />
 
           {/* Stage — full width */}
-          <div className="col-span-2 flex flex-col gap-2">
+          <div className="col-span-2 flex flex-col gap-2 px-3">
             <p className="font-crm text-body-2 text-content">
               Stage<span className="text-danger-text ml-0.5">*</span>
               {errors.stage && <span className="font-crm text-body-3 text-danger-text ml-2">{errors.stage}</span>}

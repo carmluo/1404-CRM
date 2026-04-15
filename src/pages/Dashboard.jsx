@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Sparkles, ChevronDown, X, ArrowDownUp,
+  Sparkles, ChevronDown, X, ArrowDownUp, SlidersHorizontal,
+  Trash2, GripVertical, Maximize2, Plus,
 } from 'lucide-react'
 import { dashboardData } from '../data/mockData'
 import DatePicker from '../components/ui/DatePicker'
@@ -39,6 +40,58 @@ const FILTER_OPTIONS = {
   region: ['All Regions', 'Northeast', 'Southeast', 'Midwest', 'Southwest', 'West'],
   storeType: ['All Store Types', 'GC', 'Retail', 'Online', 'Wholesale', 'Franchise'],
   rep: ['All Reps', 'Marcus Reynolds', 'Sarah Chen', 'David Park', 'Lisa Torres', 'James Wilson'],
+}
+
+const DEFAULT_MODULE_VISIBILITY = {
+  pipelineByStage: true,
+  overdueFollowUps: true,
+  todaysTasks: true,
+  bidWonLost: true,
+  topAccounts: true,
+  recentOpportunities: true,
+  atRisk: true,
+}
+
+const MODULES_CONFIG = [
+  { key: 'pipelineByStage',    label: 'Pipeline by Stage' },
+  { key: 'overdueFollowUps',   label: 'Overdue Follow-ups' },
+  { key: 'todaysTasks',        label: "Today's Tasks" },
+  { key: 'bidWonLost',         label: 'Bid Won / Lost' },
+  { key: 'topAccounts',        label: 'Top 10 Accounts' },
+  { key: 'recentOpportunities',label: 'Recent Opportunities' },
+  { key: 'atRisk',             label: 'At-Risk Deals' },
+]
+
+// Wraps a dashboard card in an edit-mode overlay with trash, grip, and resize controls
+function Editable({ moduleKey, isEditMode, onRemove, children }) {
+  if (!isEditMode) return <>{children}</>
+  return (
+    <div className="relative">
+      {children}
+      {/* frosted overlay */}
+      <div
+        className="absolute inset-0 rounded-card pointer-events-none"
+        style={{ backgroundColor: 'rgba(255,255,255,0.70)' }}
+      />
+      {/* top-right controls */}
+      <div className="absolute top-4 right-4 flex items-center gap-6 z-20">
+        <button
+          onClick={() => onRemove(moduleKey)}
+          className="text-content-subtle hover:text-content transition-colors"
+          title="Remove module"
+        >
+          <Trash2 size={20} strokeWidth={1.75} />
+        </button>
+        <div className="text-content-subtle cursor-grab" title="Drag to reorder">
+          <GripVertical size={20} strokeWidth={1.75} />
+        </div>
+      </div>
+      {/* bottom-right resize handle */}
+      <div className="absolute bottom-4 right-4 z-20 text-content-subtle cursor-nwse-resize" title="Resize">
+        <Maximize2 size={16} strokeWidth={1.75} />
+      </div>
+    </div>
+  )
 }
 
 function FilterDropdown({ label, options, value, onChange }) {
@@ -129,6 +182,16 @@ export default function Dashboard() {
     storeType: FILTER_OPTIONS.storeType[0],
     rep: 'Marcus Reynolds',  // current logged-in rep
   })
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [moduleVisibility, setModuleVisibility] = useState(DEFAULT_MODULE_VISIBILITY)
+
+  function removeModule(key) {
+    setModuleVisibility(prev => ({ ...prev, [key]: false }))
+  }
+
+  function addModule(key) {
+    setModuleVisibility(prev => ({ ...prev, [key]: true }))
+  }
 
   // Rep is always "set" so don't count it as an active filter for clear-all purposes
   const activeFilterCount = Object.entries(filters).filter(
@@ -168,20 +231,31 @@ export default function Dashboard() {
     <div className="flex flex-col gap-5">
       {/* Header — Figma node 1001:4431 */}
       <div className="flex items-center justify-between">
-        {/* Left: greeting + rep filter */}
+        {/* Left: greeting (default) or edit-mode title */}
         <div className="flex items-center" style={{ gap: 12 }}>
-          <h1
-            className="font-crm whitespace-nowrap"
-            style={{ fontSize: 34, lineHeight: '44.2px', fontWeight: 500, color: '#21272a' }}
-          >
-            {getGreeting()}, Marcus
-          </h1>
-          <FilterDropdown
-            label="Rep"
-            options={FILTER_OPTIONS.rep.filter(r => r !== 'All Reps')}
-            value={filters.rep}
-            onChange={val => setFilter('rep', val)}
-          />
+          {isEditMode ? (
+            <h1
+              className="font-crm whitespace-nowrap"
+              style={{ fontSize: 34, lineHeight: '44.2px', fontWeight: 500, color: '#21272a' }}
+            >
+              Editing layout
+            </h1>
+          ) : (
+            <>
+              <h1
+                className="font-crm whitespace-nowrap"
+                style={{ fontSize: 34, lineHeight: '44.2px', fontWeight: 500, color: '#21272a' }}
+              >
+                {getGreeting()}, Marcus
+              </h1>
+              <FilterDropdown
+                label="Rep"
+                options={FILTER_OPTIONS.rep.filter(r => r !== 'All Reps')}
+                value={filters.rep}
+                onChange={val => setFilter('rep', val)}
+              />
+            </>
+          )}
         </div>
 
         {/* Right: filters + date picker */}
@@ -215,10 +289,32 @@ export default function Dashboard() {
             </button>
           )}
           <DatePicker />
+          <button
+            onClick={() => setIsEditMode(m => !m)}
+            className="flex items-center justify-center rounded-xl transition-colors"
+            title={isEditMode ? 'Done editing' : 'Customize layout'}
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: isEditMode ? '#2D2D2D' : 'rgba(255,255,255,0.7)',
+              border: 'none',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'background-color 0.18s ease',
+            }}
+          >
+            <SlidersHorizontal
+              size={20}
+              strokeWidth={1.75}
+              color={isEditMode ? '#F2F2F2' : '#414141'}
+            />
+          </button>
         </div>
       </div>
 
       {/* Pipeline by Stage — Figma node 362:13409 */}
+      {moduleVisibility.pipelineByStage && (
+      <Editable moduleKey="pipelineByStage" isEditMode={isEditMode} onRemove={removeModule}>
       <div className="bg-white rounded-card p-4 flex flex-col gap-4">
         {/* Title */}
         <p className="font-crm font-bold text-body-2 text-content whitespace-nowrap">
@@ -304,10 +400,14 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+      </Editable>
+      )}
 
       {/* Two-column grid — 3 rows × 2 cols, equal row heights via CSS grid stretch */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Row 1, col 1 — Overdue Follow-ups — Figma node 1001:4440 */}
+          {moduleVisibility.overdueFollowUps && (
+          <Editable moduleKey="overdueFollowUps" isEditMode={isEditMode} onRemove={removeModule}>
           <div
             className="rounded-[8px] flex flex-col"
             style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: 16, gap: 16 }}
@@ -392,8 +492,12 @@ export default function Dashboard() {
               </table>
             </div>
           </div>
+          </Editable>
+          )}
 
           {/* Row 1, col 2 — Today's Tasks — Figma node 1001:4445 */}
+          {moduleVisibility.todaysTasks && (
+          <Editable moduleKey="todaysTasks" isEditMode={isEditMode} onRemove={removeModule}>
           <Tasklist
             tasks={todaysTasks}
             completedTaskIds={completedTaskIds}
@@ -403,26 +507,80 @@ export default function Dashboard() {
             onEmail={task => window.location.href = `mailto:${task.email}`}
             onNavigate={task => navigate(`/opportunities/${task.opportunityId}`)}
           />
+          </Editable>
+          )}
 
           {/* Row 2, col 1 — Bid Won/Lost Ratio — Figma node 1001:4459 */}
+          {moduleVisibility.bidWonLost && (
+          <Editable moduleKey="bidWonLost" isEditMode={isEditMode} onRemove={removeModule}>
           <BidWonLostCard data={bidWonLostRatio} />
+          </Editable>
+          )}
 
           {/* Row 2, col 2 — Top 10 Accounts — Figma node 1001:4460 */}
+          {moduleVisibility.topAccounts && (
+          <Editable moduleKey="topAccounts" isEditMode={isEditMode} onRemove={removeModule}>
           <TopAccountsCard accounts={top10Accounts} onAccountClick={openAccountDrawer} />
+          </Editable>
+          )}
 
           {/* Row 3, col 1 — Recent Opportunities — Figma node 519:75735 */}
+          {moduleVisibility.recentOpportunities && (
+          <Editable moduleKey="recentOpportunities" isEditMode={isEditMode} onRemove={removeModule}>
           <RecentOpportunities
             created={recentOpportunitiesCreated}
             updated={recentOpportunitiesUpdated}
             onRowClick={openOppDrawer}
           />
+          </Editable>
+          )}
 
           {/* Row 3, col 2 — At-Risk — Figma node 1001:4463 */}
+          {moduleVisibility.atRisk && (
+          <Editable moduleKey="atRisk" isEditMode={isEditMode} onRemove={removeModule}>
           <AtRiskCard
             items={atRisk}
             onRowClick={openOppDrawer}
           />
+          </Editable>
+          )}
       </div>
+
+      {/* Add module — Figma node 1477:15463, visible only in edit mode */}
+      {isEditMode && (() => {
+        const hidden = MODULES_CONFIG.filter(m => !moduleVisibility[m.key])
+        return (
+          <div
+            className="rounded-card flex flex-col items-center justify-center gap-3"
+            style={{
+              minHeight: 120,
+              border: '2px dashed #CBCBCB',
+              backgroundColor: 'transparent',
+            }}
+          >
+            <div className="flex items-center gap-2 text-content-subtle">
+              <Plus size={16} strokeWidth={1.75} />
+              <span className="font-crm font-medium text-body-3">Add module</span>
+            </div>
+            {hidden.length > 0 ? (
+              <div className="flex items-center gap-2 flex-wrap justify-center px-4">
+                {hidden.map(m => (
+                  <button
+                    key={m.key}
+                    onClick={() => addModule(m.key)}
+                    className="font-crm text-body-3 text-content-primary hover:text-content-primary-bold transition-colors px-3 py-1 rounded-xl hover:bg-brand"
+                    style={{ fontSize: 13, border: '1px solid #92C9B9' }}
+                  >
+                    + {m.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="font-crm text-body-3 text-content-disabled">All modules visible</p>
+            )}
+          </div>
+        )
+      })()}
 
       <PhoneModal
         isOpen={phoneModal.isOpen}
@@ -450,6 +608,7 @@ export default function Dashboard() {
           />
         )}
       </AnimatePresence>
+
     </div>
   )
 }

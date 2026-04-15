@@ -31,7 +31,7 @@ export default function EmailDraftModal({
   contactEmail,
   oppTitle,
 }) {
-  const { sendEstimateEmail } = useApp()
+  const { sendEstimateEmail, showToast } = useApp()
 
   const [form, setForm] = useState({
     to: '',
@@ -65,6 +65,7 @@ export default function EmailDraftModal({
       cc: form.cc,
       subject: form.subject,
     })
+    showToast('Sent')
     onClose()
   }
 

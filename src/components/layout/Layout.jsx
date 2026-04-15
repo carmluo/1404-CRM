@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import TopNav from './TopNav'
 import NotificationDrawer from '../ui/NotificationDrawer'
+import ToastContainer from '../ui/Toast'
 import { AppProvider } from '../../context/AppContext'
 
 export const NAV_HEIGHT = 100
@@ -35,6 +36,7 @@ export default function Layout() {
         </div>
 
         <NotificationDrawer />
+        <ToastContainer />
       </div>
     </AppProvider>
   )

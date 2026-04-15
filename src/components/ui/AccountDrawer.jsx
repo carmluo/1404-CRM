@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  X, LogIn, SquareLibrary, User, ListChecks, ClipboardList, ArrowUpRight, Activity,
+  X, SquareLibrary, User, ListChecks, ClipboardList, ArrowUpRight, Activity,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import Badge from './Badge'
@@ -47,47 +47,38 @@ export default function AccountDrawer({ account, onClose, onViewDetail }) {
 
       {/* Drawer */}
       <motion.div
-        className="fixed right-0 inset-y-0 w-[35vw] bg-surface-white border-l border-border shadow-2xl z-50 flex flex-col overflow-hidden"
+        className="fixed right-0 inset-y-0 w-[35vw] z-50 flex flex-col overflow-hidden shadow-[0px_2px_4px_0px_rgba(173,173,173,0.25),-2px_4px_12px_0px_rgba(203,203,203,0.5)]"
+        style={{ background: 'linear-gradient(148.4deg, #CFE8E0 4.85%, #F2F2F2 29.35%)' }}
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'tween', duration: 0.18, ease: 'easeOut' }}
       >
-        <div className="flex flex-col gap-4 px-[9px] py-[14px] h-full min-h-0">
-
           {/* ── Header ── */}
-          <div className="flex items-center justify-between pl-3 shrink-0">
-            <div className="flex items-center gap-2.5 flex-1 min-w-0 mr-2">
+          <div className="flex h-[80px] items-center justify-between p-5 shrink-0">
+            <button
+              onClick={handleViewDetail}
+              className="flex items-center gap-2.5 flex-1 min-w-0 mr-2 text-left group"
+            >
               <div className="w-9 h-9 rounded-full bg-brand-action flex items-center justify-center shrink-0">
                 <span className="font-crm text-body-3 font-bold text-content-invert">
                   {account.name.charAt(0)}
                 </span>
               </div>
-              <h2 className="font-crm text-h6 font-bold text-content leading-[28.6px] truncate min-w-0">
+              <h2 className="font-crm text-h6 font-bold text-content leading-[28.6px] truncate min-w-0 group-hover:underline">
                 {account.name}
               </h2>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={handleViewDetail}
-                className="flex gap-2 items-center pl-[10px] pr-3 py-2 rounded-[12px] hover:bg-surface transition-colors"
-              >
-                <LogIn size={24} className="text-content-primary" />
-                <span className="font-crm text-body-3 font-bold text-content-primary whitespace-nowrap">
-                  View details
-                </span>
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-[12px] text-content-disabled hover:text-content-subtlest hover:bg-surface transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-content-disabled hover:text-content-subtlest hover:bg-surface transition-colors shrink-0"
+            >
+              <X size={24} />
+            </button>
           </div>
 
           {/* ── Scrollable content ── */}
-          <div className="flex-1 flex flex-col gap-4 overflow-y-auto min-h-0">
+          <div className="bg-surface-white rounded-tl-card rounded-tr-card flex-1 flex flex-col gap-4 overflow-y-auto min-h-0 px-2 pb-4">
 
             {/* Suggested focus */}
             {suggestedTasks.length > 0 && (
@@ -264,7 +255,6 @@ export default function AccountDrawer({ account, onClose, onViewDetail }) {
             </Accordion>
 
           </div>
-        </div>
       </motion.div>
     </>
   )

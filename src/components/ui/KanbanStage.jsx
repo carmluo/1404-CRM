@@ -1,4 +1,4 @@
-import { Plus, TrendingUp } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import KanbanCard from './KanbanCard'
 
 // Figma node 652:34328
@@ -15,7 +15,7 @@ function formatTotal(val) {
   return `$${val.toLocaleString()}`
 }
 
-export default function KanbanStage({ stage, opps, total, insight, onAdd, onCardClick }) {
+export default function KanbanStage({ stage, opps, total, insight, onCardClick }) {
   return (
     <div className="flex flex-col shrink-0" style={{ width: 266, gap: 12 }}>
       {/* Column header */}
@@ -24,28 +24,20 @@ export default function KanbanStage({ stage, opps, total, insight, onAdd, onCard
         style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: 12, gap: 12 }}
       >
         <div className="flex flex-col" style={{ gap: 0 }}>
-          {/* Stage name + count + plus */}
-          <div className="flex items-end justify-between shrink-0 w-full">
-            <div className="flex items-end" style={{ gap: 8 }}>
-              <p
-                className="font-crm font-bold whitespace-nowrap"
-                style={{ fontSize: 18, lineHeight: 'normal', color: '#565656' }}
-              >
-                {stage}
-              </p>
-              <p
-                className="font-crm whitespace-nowrap"
-                style={{ fontSize: 14, lineHeight: '21px', color: '#565656' }}
-              >
-                {opps.length}
-              </p>
-            </div>
-            <button
-              onClick={onAdd}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#414141', flexShrink: 0 }}
+          {/* Stage name + count */}
+          <div className="flex items-end shrink-0" style={{ gap: 8 }}>
+            <p
+              className="font-crm font-bold whitespace-nowrap"
+              style={{ fontSize: 18, lineHeight: 'normal', color: '#565656' }}
             >
-              <Plus size={24} strokeWidth={1.75} />
-            </button>
+              {stage}
+            </p>
+            <p
+              className="font-crm whitespace-nowrap"
+              style={{ fontSize: 14, lineHeight: '21px', color: '#565656' }}
+            >
+              {opps.length}
+            </p>
           </div>
 
           {/* Total amount */}

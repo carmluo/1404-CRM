@@ -41,6 +41,7 @@ export default function UpcomingTasks({
   onDismiss,
   onSaveLater,
   onCall,
+  onTaskClick,
   emptyMessage = 'No upcoming tasks.',
 }) {
   return (
@@ -78,15 +79,27 @@ export default function UpcomingTasks({
 
               {/* Task name + badge */}
               <div className="flex flex-1 min-w-0 gap-[8px] items-center">
-                <p className={`font-crm text-body-3 min-w-0 ${
-                  isCompleted
-                    ? 'text-content-disabled line-through'
-                    : task.isSuggested
-                      ? 'text-content-disabled whitespace-nowrap'
-                      : 'text-content'
-                }`}>
-                  {task.task}
-                </p>
+                {onTaskClick && task.opportunityId && !isCompleted ? (
+                  <button
+                    type="button"
+                    onClick={() => onTaskClick(task)}
+                    className={`font-crm text-body-3 min-w-0 text-left hover:underline ${
+                      task.isSuggested ? 'text-content-disabled whitespace-nowrap' : 'text-content'
+                    }`}
+                  >
+                    {task.task}
+                  </button>
+                ) : (
+                  <p className={`font-crm text-body-3 min-w-0 ${
+                    isCompleted
+                      ? 'text-content-disabled line-through'
+                      : task.isSuggested
+                        ? 'text-content-disabled whitespace-nowrap'
+                        : 'text-content'
+                  }`}>
+                    {task.task}
+                  </p>
+                )}
                 {task.isSuggested && !isCompleted && <SuggestedBadge />}
               </div>
 

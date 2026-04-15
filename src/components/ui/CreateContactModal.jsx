@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronDown, Sparkles, Loader2, Check } from 'lucide-react'
 import { accounts } from '../../data/mockData'
+import { useApp } from '../../context/AppContext'
 
 const REPS = ['Marcus Reynolds', 'Sarah Kim']
 const PREFERRED_COMMS = ['Email', 'Phone', 'Text', 'In-Person']
@@ -189,6 +190,7 @@ function AccountCombobox({ accountId, accountName, onSelect }) {
 }
 
 export default function CreateContactModal({ isOpen, onClose, onAdd }) {
+  const { showToast } = useApp()
   const [form, setForm] = useState({
     name: '',
     title: '',
@@ -258,6 +260,7 @@ export default function CreateContactModal({ isOpen, onClose, onAdd }) {
       lastContacted: null,
       createdAt: new Date().toISOString().split('T')[0],
     })
+    showToast(`Added "${form.name}" contact`)
     onClose()
     resetForm()
   }

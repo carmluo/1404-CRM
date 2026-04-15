@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import {
-  Plus, Pencil,
+  Pencil,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { accounts, contacts as allContacts } from '../data/mockData'
@@ -23,6 +24,9 @@ import EmailDraftModal from '../components/ui/EmailDraftModal'
 import OpportunityCard from '../components/ui/OpportunityCard'
 import NotesFeed from '../components/ui/NotesFeed'
 import NoteComposePanel from '../components/ui/NoteComposePanel'
+import EstimatesToolbar from '../components/ui/EstimatesToolbar'
+import ContactDrawer from '../components/ui/ContactDrawer'
+import OpportunityDrawer from '../components/ui/OpportunityDrawer'
 
 
 const MOCK_OPP_HISTORY = [
@@ -50,6 +54,8 @@ export default function AccountDetail() {
   const [acceptedSuggested, setAcceptedSuggested] = useState([])
   const [showCreateEstimate, setShowCreateEstimate] = useState(false)
   const [emailDraft, setEmailDraft] = useState(null)
+  const [selectedContact, setSelectedContact] = useState(null)
+  const [selectedOpp, setSelectedOpp] = useState(null)
 
   if (!account) {
     return (
@@ -144,7 +150,10 @@ export default function AccountDetail() {
             suggestedContacts={account.suggestedContacts || []}
             dismissedSuggested={dismissedSuggested}
             acceptedSuggested={acceptedSuggested}
-            onContactClick={cnt => navigate(`/contacts/${cnt.id}`)}
+            onContactClick={cnt => {
+              const fullContact = allContacts.find(c => c.id === cnt.id) || cnt
+              setSelectedContact(fullContact)
+            }}
             onEmail={cnt => window.location.href = `mailto:${cnt.email}`}
             onPhone={cnt => setPhoneModal({ isOpen: true, contact: cnt.name, phone: cnt.phone, company: account.name })}
             onAcceptSuggested={name => setAcceptedSuggested(prev => [...prev, name])}
@@ -168,7 +177,7 @@ export default function AccountDetail() {
                     <OpportunityCard
                       key={opp.id}
                       opportunity={opp}
-                      onClick={() => navigate(`/opportunities/${opp.id}`)}
+                      onClick={() => setSelectedOpp(opp)}
                     />
                   ))
                 )}
@@ -192,17 +201,8 @@ export default function AccountDetail() {
               account.contacts?.some(ac => ac.id === c.id)
             )
             return (
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-crm text-body-2 font-bold text-content">Estimates</h3>
-                  <button
-                    onClick={() => setShowCreateEstimate(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-card border border-border font-crm text-body-3 text-content-subtlest hover:bg-surface transition-colors"
-                  >
-                    <Plus size={13} />
-                    Create new estimate
-                  </button>
-                </div>
+              <div className="p-4 flex flex-col gap-4">
+                <EstimatesToolbar onCreateNew={() => setShowCreateEstimate(true)} />
                 <EstimatesTable
                   estimates={allEstimates}
                   showOppTitle
@@ -238,6 +238,10 @@ export default function AccountDetail() {
                 completedTaskIds={completedTaskIds}
                 onComplete={completeTask}
                 onSaveLater={(task) => saveTaskForLater({ ...task, account: account.name })}
+                onTaskClick={task => {
+                  const opp = opportunities.find(o => o.id === task.opportunityId)
+                  if (opp) setSelectedOpp(opp)
+                }}
                 emptyMessage="No upcoming tasks. Add one above."
               />
 
@@ -251,13 +255,11 @@ export default function AccountDetail() {
 
           {/* Notes Tab */}
           {activeTab === 'notes' && (
-            <div className="p-4">
-              <NotesFeed
-                notes={accountNotes}
-                onAddNote={() => setShowCompose(true)}
-                onTogglePin={togglePinNote}
-              />
-            </div>
+            <NotesFeed
+              notes={accountNotes}
+              onAddNote={() => setShowCompose(true)}
+              onTogglePin={togglePinNote}
+            />
           )}
         </div>
       </div>
@@ -298,6 +300,24 @@ export default function AccountDetail() {
           relatedOpps,
         }}
       />
+
+      <AnimatePresence>
+        {selectedContact && (
+          <ContactDrawer
+            contact={selectedContact}
+            onClose={() => setSelectedContact(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedOpp && (
+          <OpportunityDrawer
+            opp={selectedOpp}
+            onClose={() => setSelectedOpp(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

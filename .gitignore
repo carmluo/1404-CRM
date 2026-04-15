@@ -1,0 +1,23 @@
+.mcp.json
+node_modules/
+dist/
+.env
+.env.local
+process.md
+crm_figma_prototype_prompt.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.code-workspace
+
+# Claude Code (AI tooling)
+.claude/
+
+# Local env variants
+.env.*.local
+*.local

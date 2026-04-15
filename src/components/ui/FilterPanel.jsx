@@ -1,6 +1,14 @@
-import React, { useState } from 'react'
-import { X, SlidersHorizontal } from 'lucide-react'
+import { useState } from 'react'
+import { X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Tag from './Tag'
+
+// Figma node 1480:42116
+// Background: linear-gradient(145.67deg, #EAE7E4 4.85%, #F2F2F2 29.35%) — secondary/beige
+// Header: h-[80px] p-[20px], SlidersHorizontal 24px + H6 bold
+// Content: bg-surface-white rounded-tl-card rounded-tr-card px-[8px] py-[24px] gap-[16px]
+// Filter group: px-[12px] gap-[8px], label body-2 text-content-subtle
+// Input: h-[47px] px-[12px] py-[10px] rounded-[4px] border-border body-2
 
 export default function FilterPanel({ isOpen, onClose, context = 'opportunities', onApply }) {
   const [localFilters, setLocalFilters] = useState({
@@ -65,6 +73,7 @@ export default function FilterPanel({ isOpen, onClose, context = 'opportunities'
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Backdrop */}
           <motion.div
             className="fixed inset-0 bg-black/20 z-40"
             initial={{ opacity: 0 }}
@@ -72,156 +81,132 @@ export default function FilterPanel({ isOpen, onClose, context = 'opportunities'
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
+
+          {/* Panel */}
           <motion.div
-            className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col"
-            initial={{ x: 320 }}
+            className="fixed right-0 top-0 h-full w-[35vw] z-50 flex flex-col overflow-hidden shadow-[0px_2px_4px_0px_rgba(173,173,173,0.25),-2px_4px_12px_0px_rgba(203,203,203,0.5)]"
+            style={{ background: 'linear-gradient(145.67deg, #EAE7E4 4.85%, #F2F2F2 29.35%)' }}
+            initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: 320 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'tween', duration: 0.18, ease: 'easeOut' }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e5e5]">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal size={16} className="text-[#2B6B52]" />
-                <h2 className="font-semibold text-[#21272a]">Filters</h2>
+            {/* ── Header ── */}
+            <div className="flex h-[80px] items-center justify-between p-5 shrink-0">
+              <div className="flex items-center gap-3">
+                <SlidersHorizontal size={24} className="text-content shrink-0" />
+                <h2 className="font-crm text-h6 font-bold text-content leading-[28.6px] whitespace-nowrap">
+                  Filters
+                </h2>
                 {getActiveCount() > 0 && (
-                  <span
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                    style={{ backgroundColor: '#2B6B52' }}
-                  >
+                  <span className="w-5 h-5 rounded-full bg-brand-action flex items-center justify-center font-crm text-[12px] font-bold text-content-invert shrink-0">
                     {getActiveCount()}
                   </span>
                 )}
               </div>
-              <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-[#838383]">
-                <X size={16} />
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl text-content-disabled hover:text-content-subtlest hover:bg-surface transition-colors shrink-0"
+              >
+                <X size={24} />
               </button>
             </div>
 
-            {/* Filters */}
-            <div className="flex-1 overflow-y-auto py-4 px-5 flex flex-col gap-5">
+            {/* ── Scrollable content ── */}
+            <div className="bg-surface-white rounded-tl-card rounded-tr-card flex-1 flex flex-col gap-4 overflow-y-auto min-h-0 px-2 py-6">
 
-              {/* Stage filter (opportunities) */}
+              {/* Stage (opportunities) */}
               {context === 'opportunities' && (
-                <div>
-                  <p className="text-xs font-semibold text-[#838383] uppercase tracking-wide mb-2">Stage</p>
-                  <div className="flex flex-wrap gap-2">
-                    {stageOptions.map(s => (
-                      <button
-                        key={s}
-                        onClick={() => toggleArrayFilter('stages', s)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                          localFilters.stages.includes(s)
-                            ? 'bg-[#2B6B52] text-white border-[#2B6B52]'
-                            : 'bg-white text-[#565656] border-[#e5e5e5] hover:border-[#2B6B52]'
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <FilterGroup label="Stage">
+                  {stageOptions.map(s => (
+                    <Tag
+                      key={s}
+                      label={s}
+                      state={localFilters.stages.includes(s) ? 'selected' : 'unselected'}
+                      onClick={() => toggleArrayFilter('stages', s)}
+                    />
+                  ))}
+                </FilterGroup>
               )}
 
-              {/* Status filter (opportunities) */}
+              {/* Status (opportunities) */}
               {context === 'opportunities' && (
-                <div>
-                  <p className="text-xs font-semibold text-[#838383] uppercase tracking-wide mb-2">Status</p>
-                  <div className="flex flex-wrap gap-2">
-                    {statusOptions.map(s => (
-                      <button
-                        key={s}
-                        onClick={() => toggleArrayFilter('statuses', s)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                          localFilters.statuses.includes(s)
-                            ? 'bg-[#2B6B52] text-white border-[#2B6B52]'
-                            : 'bg-white text-[#565656] border-[#e5e5e5] hover:border-[#2B6B52]'
-                        }`}
-                      >
-                        {s === 'no-activity' ? 'No activity' : s === 'overdue' ? 'Overdue' : 'Active'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <FilterGroup label="Status">
+                  {statusOptions.map(s => (
+                    <Tag
+                      key={s}
+                      label={s === 'no-activity' ? 'No activity' : s === 'overdue' ? 'Overdue' : 'Active'}
+                      state={localFilters.statuses.includes(s) ? 'selected' : 'unselected'}
+                      onClick={() => toggleArrayFilter('statuses', s)}
+                    />
+                  ))}
+                </FilterGroup>
               )}
 
-              {/* Type filter (accounts) */}
+              {/* Type (accounts) */}
               {context === 'accounts' && (
-                <div>
-                  <p className="text-xs font-semibold text-[#838383] uppercase tracking-wide mb-2">Type</p>
-                  <div className="flex gap-2">
-                    {typeOptions.map(t => (
-                      <button
-                        key={t}
-                        onClick={() => toggleArrayFilter('types', t)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                          localFilters.types.includes(t)
-                            ? 'bg-[#2B6B52] text-white border-[#2B6B52]'
-                            : 'bg-white text-[#565656] border-[#e5e5e5] hover:border-[#2B6B52]'
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <FilterGroup label="Type">
+                  {typeOptions.map(t => (
+                    <Tag
+                      key={t}
+                      label={t}
+                      state={localFilters.types.includes(t) ? 'selected' : 'unselected'}
+                      onClick={() => toggleArrayFilter('types', t)}
+                    />
+                  ))}
+                </FilterGroup>
               )}
 
-              {/* Engagement filter (contacts) */}
+              {/* Engagement (contacts) */}
               {context === 'contacts' && (
-                <div>
-                  <p className="text-xs font-semibold text-[#838383] uppercase tracking-wide mb-2">Engagement</p>
-                  <div className="flex gap-2">
-                    {engagementOptions.map(e => (
-                      <button
-                        key={e}
-                        onClick={() => toggleArrayFilter('engagements', e)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                          localFilters.engagements.includes(e)
-                            ? 'bg-[#2B6B52] text-white border-[#2B6B52]'
-                            : 'bg-white text-[#565656] border-[#e5e5e5] hover:border-[#2B6B52]'
-                        }`}
-                      >
-                        {e}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <FilterGroup label="Engagement">
+                  {engagementOptions.map(e => (
+                    <Tag
+                      key={e}
+                      label={e}
+                      state={localFilters.engagements.includes(e) ? 'selected' : 'unselected'}
+                      onClick={() => toggleArrayFilter('engagements', e)}
+                    />
+                  ))}
+                </FilterGroup>
               )}
 
-              {/* Owner */}
-              <div>
-                <p className="text-xs font-semibold text-[#838383] uppercase tracking-wide mb-2">Account Owner</p>
-                <select
-                  value={localFilters.owner}
-                  onChange={e => setLocalFilters(prev => ({ ...prev, owner: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm text-[#21272a] focus:outline-none focus:border-[#2B6B52] bg-white"
-                >
-                  <option value="">All owners</option>
-                  {ownerOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
+              {/* Account Owner */}
+              <div className="flex flex-col gap-1 px-3 w-full">
+                <p className="font-crm text-body-2 text-content leading-[27px]">Account Owner</p>
+                <div className="relative w-full">
+                  <select
+                    value={localFilters.owner}
+                    onChange={e => setLocalFilters(prev => ({ ...prev, owner: e.target.value }))}
+                    className="w-full h-[47px] appearance-none bg-surface-white border border-border rounded-badge px-3 py-[10px] font-crm text-body-2 text-content focus:outline-none focus:border-border-primary"
+                  >
+                    <option value="">eg. Kitchen Remodel — Store #1842</option>
+                    {ownerOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                  <ChevronDown size={20} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-content-disabled" />
+                </div>
               </div>
 
-              {/* Amount range */}
+              {/* Revenue / Amount range */}
               {(context === 'opportunities' || context === 'accounts') && (
-                <div>
-                  <p className="text-xs font-semibold text-[#838383] uppercase tracking-wide mb-2">
-                    {context === 'opportunities' ? 'Amount range' : 'Revenue range'}
+                <div className="flex flex-col gap-1 px-3 w-full">
+                  <p className="font-crm text-body-2 text-content leading-[27px]">
+                    {context === 'opportunities' ? 'Amount Range' : 'Revenue Range'}
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <input
                       type="number"
                       placeholder="Min"
                       value={localFilters.amountMin}
                       onChange={e => setLocalFilters(prev => ({ ...prev, amountMin: e.target.value }))}
-                      className="flex-1 px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
+                      className="flex-1 min-w-0 h-[47px] bg-surface-white border border-border rounded-badge px-3 py-[10px] font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary"
                     />
                     <input
                       type="number"
                       placeholder="Max"
                       value={localFilters.amountMax}
                       onChange={e => setLocalFilters(prev => ({ ...prev, amountMax: e.target.value }))}
-                      className="flex-1 px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
+                      className="flex-1 min-w-0 h-[47px] bg-surface-white border border-border rounded-badge px-3 py-[10px] font-crm text-body-2 text-content placeholder:text-content-disabled focus:outline-none focus:border-border-primary"
                     />
                   </div>
                 </div>
@@ -229,38 +214,38 @@ export default function FilterPanel({ isOpen, onClose, context = 'opportunities'
 
               {/* Close date range (opportunities) */}
               {context === 'opportunities' && (
-                <div>
-                  <p className="text-xs font-semibold text-[#838383] uppercase tracking-wide mb-2">Close date</p>
-                  <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1 px-3 w-full">
+                  <p className="font-crm text-body-2 text-content leading-[27px]">Close date</p>
+                  <div className="flex flex-col gap-1">
                     <input
                       type="date"
                       value={localFilters.closeDateFrom}
                       onChange={e => setLocalFilters(prev => ({ ...prev, closeDateFrom: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
+                      className="w-full h-[47px] bg-surface-white border border-border rounded-badge px-3 py-[10px] font-crm text-body-2 text-content focus:outline-none focus:border-border-primary"
                     />
                     <input
                       type="date"
                       value={localFilters.closeDateTo}
                       onChange={e => setLocalFilters(prev => ({ ...prev, closeDateTo: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-[#dde1e6] text-sm focus:outline-none focus:border-[#2B6B52]"
+                      className="w-full h-[47px] bg-surface-white border border-border rounded-badge px-3 py-[10px] font-crm text-body-2 text-content focus:outline-none focus:border-border-primary"
                     />
                   </div>
                 </div>
               )}
+
             </div>
 
-            {/* Footer */}
-            <div className="px-5 py-4 border-t border-[#e5e5e5] flex gap-3">
+            {/* ── Footer ── */}
+            <div className="px-5 py-4 flex gap-3 shrink-0 bg-surface-white border-t border-border">
               <button
                 onClick={clearAll}
-                className="flex-1 py-2 rounded-lg border border-[#e5e5e5] text-sm text-[#565656] font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 h-[47px] rounded-card border border-border font-crm text-body-3 text-content-subtle hover:bg-surface transition-colors"
               >
                 Clear all
               </button>
               <button
                 onClick={handleApply}
-                className="flex-1 py-2 rounded-lg text-sm text-white font-medium transition-colors"
-                style={{ backgroundColor: '#2B6B52' }}
+                className="flex-1 h-[47px] rounded-card bg-brand-action font-crm text-body-3 text-content-invert hover:opacity-90 transition-opacity"
               >
                 Apply filters
               </button>
@@ -269,5 +254,16 @@ export default function FilterPanel({ isOpen, onClose, context = 'opportunities'
         </>
       )}
     </AnimatePresence>
+  )
+}
+
+function FilterGroup({ label, children }) {
+  return (
+    <div className="flex flex-col gap-2 px-3 w-full">
+      <p className="font-crm text-body-2 text-content-subtle leading-[27px]">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {children}
+      </div>
+    </div>
   )
 }

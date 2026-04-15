@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Mail, X,
-  Plus, Calendar, Pencil,
+  Calendar, Pencil,
 } from 'lucide-react'
 import { format, parseISO, differenceInDays } from 'date-fns'
 import { useApp } from '../context/AppContext'
@@ -21,13 +21,17 @@ import CreateEstimateModal from '../components/ui/CreateEstimateModal'
 import EmailDraftModal from '../components/ui/EmailDraftModal'
 import NotesFeed from '../components/ui/NotesFeed'
 import NoteComposePanel from '../components/ui/NoteComposePanel'
+import DocumentUpload from '../components/ui/DocumentUpload'
+import EstimatesToolbar from '../components/ui/EstimatesToolbar'
+import ContactDrawer from '../components/ui/ContactDrawer'
+import { AnimatePresence } from 'framer-motion'
 import { contacts as allContacts } from '../data/mockData'
 
 
 export default function OpportunityDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { opportunities, notes, addNote, togglePinNote, completedTaskIds, completeTask, saveTaskForLater } = useApp()
+  const { opportunities, notes, addNote, togglePinNote, completedTaskIds, completeTask, saveTaskForLater, deleteDocument, addDocument, showToast } = useApp()
 
   const opp = opportunities.find(o => o.id === id)
   const oppNotes = (notes || [])
@@ -49,6 +53,7 @@ export default function OpportunityDetail() {
   const [localActivities, setLocalActivities] = useState(opp?.activities?.upcoming || [])
   const [showCreateEstimate, setShowCreateEstimate] = useState(false)
   const [emailDraft, setEmailDraft] = useState(null) // { estimate, mode }
+  const [showContactDrawer, setShowContactDrawer] = useState(false)
 
   if (!opp) {
     return (
@@ -125,7 +130,7 @@ export default function OpportunityDetail() {
         title={localOpp.title}
         contact={opp.contact}
         contactId={opp.contactId}
-        onContactClick={() => opp.contactId && navigate(`/contacts/${opp.contactId}`)}
+        onContactClick={() => opp.contactId && setShowContactDrawer(true)}
         amount={localOpp.amount}
         stage={localOpp.stage}
         daysInStage={daysInStage}
@@ -245,8 +250,18 @@ export default function OpportunityDetail() {
 
           {/* Documents Tab */}
           {activeTab === 'documents' && (
-            <div className="p-[20px]">
-              <DocumentsTable documents={opp.documents ?? []} />
+            <div className="p-[20px] flex flex-col gap-3">
+              <DocumentUpload
+                onUpload={files => files.forEach(file => {
+                  const doc = { name: file.name, source: 'Uploaded', date: new Date().toISOString().split('T')[0] }
+                  addDocument(opp.id, doc)
+                  showToast(`Uploaded "${file.name}"`, { onUndo: () => deleteDocument(opp.id, file.name) })
+                })}
+              />
+              <DocumentsTable
+                documents={opp.documents ?? []}
+                onDelete={docName => deleteDocument(opp.id, docName)}
+              />
             </div>
           )}
 
@@ -255,17 +270,8 @@ export default function OpportunityDetail() {
             const contactEmail = allContacts.find(c => c.id === opp.contactId)?.email || ''
             const estimates = opp.estimates || []
             return (
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-crm text-body-2 font-bold text-content">Estimates</h3>
-                  <button
-                    onClick={() => setShowCreateEstimate(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-card border border-border font-crm text-body-3 text-content-subtlest hover:bg-surface transition-colors"
-                  >
-                    <Plus size={13} />
-                    Create new estimate
-                  </button>
-                </div>
+              <div className="p-4 flex flex-col gap-4">
+                <EstimatesToolbar onCreateNew={() => setShowCreateEstimate(true)} />
                 <EstimatesTable
                   estimates={estimates}
                   onSend={est => setEmailDraft({ estimate: est, mode: 'send', contactEmail })}
@@ -313,14 +319,11 @@ export default function OpportunityDetail() {
           <BiddingSection bids={opp.bids ?? []} biddingHistory={opp.biddingHistory ?? []} />
 
           {/* Notes */}
-          <div className="bg-surface-elevated rounded-card shadow-card p-4">
-            <h3 className="font-crm text-body-2 font-bold text-content mb-3">Notes</h3>
-            <NotesFeed
-              notes={oppNotes}
-              onAddNote={() => setShowCompose(true)}
-              onTogglePin={togglePinNote}
-            />
-          </div>
+          <NotesFeed
+            notes={oppNotes}
+            onAddNote={() => setShowCompose(true)}
+            onTogglePin={togglePinNote}
+          />
         </div>
       </div>
 
@@ -360,6 +363,15 @@ export default function OpportunityDetail() {
           relatedOpps: [],
         }}
       />
+
+      <AnimatePresence>
+        {showContactDrawer && contact && (
+          <ContactDrawer
+            contact={contact}
+            onClose={() => setShowContactDrawer(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

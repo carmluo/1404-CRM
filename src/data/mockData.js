@@ -1770,6 +1770,7 @@ export const dashboardData = {
       opportunityId: 'opp-1',
       actions: ['bell', 'phone'],
       phone: '555-0101',
+      dueDate: '2026-04-12',
     },
     {
       id: 'task-2',
@@ -1781,6 +1782,7 @@ export const dashboardData = {
       opportunityId: 'opp-5',
       actions: ['bell', 'email'],
       email: 'stephanie.n@target.com',
+      dueDate: '2026-04-13',
     },
     {
       id: 'task-3',
@@ -1792,6 +1794,7 @@ export const dashboardData = {
       opportunityId: 'opp-12',
       actions: ['bell', 'phone'],
       phone: '555-1001',
+      dueDate: '2026-04-15',
     },
     {
       id: 'task-4',
@@ -1802,6 +1805,7 @@ export const dashboardData = {
       accountId: 'acc-1',
       opportunityId: 'opp-15',
       actions: ['bell', 'arrow'],
+      dueDate: '2026-04-15',
     },
     {
       id: 'task-5',
@@ -1812,6 +1816,7 @@ export const dashboardData = {
       accountId: 'acc-11',
       opportunityId: 'opp-16',
       actions: ['bell', 'arrow'],
+      dueDate: '2026-04-16',
     },
     {
       id: 'task-6',
@@ -1823,6 +1828,7 @@ export const dashboardData = {
       opportunityId: 'opp-19',
       actions: ['bell', 'email'],
       email: 's.pierce@precisionhvac.com',
+      dueDate: '2026-04-18',
     },
   ],
   bidWonLostRatio: {

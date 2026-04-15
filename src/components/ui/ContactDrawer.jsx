@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  X, LogIn, ClipboardList, SquareLibrary,
+  X, ClipboardList, SquareLibrary,
   ListChecks, ArrowUpRight, Activity,
 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
@@ -29,18 +29,20 @@ export default function ContactDrawer({ contact, onClose }) {
 
       {/* Drawer */}
       <motion.div
-        className="fixed right-0 inset-y-0 w-[35vw] bg-surface-white border-l border-border shadow-2xl z-50 flex flex-col overflow-hidden"
+        className="fixed right-0 inset-y-0 w-[35vw] z-50 flex flex-col overflow-hidden shadow-[0px_2px_4px_0px_rgba(173,173,173,0.25),-2px_4px_12px_0px_rgba(203,203,203,0.5)]"
+        style={{ background: 'linear-gradient(148.4deg, #CFE8E0 4.85%, #F2F2F2 29.35%)' }}
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       >
-        <div className="flex flex-col gap-4 px-[9px] py-[14px] h-full min-h-0">
-
           {/* ── Header ── */}
-          <div className="flex items-center justify-between pl-3 shrink-0">
-            <div className="flex flex-col gap-1 flex-1 min-w-0 mr-2">
-              <h2 className="font-crm text-h6 font-bold text-content leading-[28.6px] truncate">
+          <div className="flex h-[80px] items-center justify-between p-5 shrink-0">
+            <button
+              onClick={() => { navigate(`/contacts/${contact.id}`); onClose() }}
+              className="flex flex-col gap-1 flex-1 min-w-0 mr-2 text-left group"
+            >
+              <h2 className="font-crm text-h6 font-bold text-content leading-[28.6px] truncate group-hover:underline">
                 {contact.name}
               </h2>
               {(contact.title || contact.account) && (
@@ -51,28 +53,17 @@ export default function ContactDrawer({ contact, onClose }) {
                   )}
                 </p>
               )}
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={() => { navigate(`/contacts/${contact.id}`); onClose() }}
-                className="flex gap-2 items-center pl-[10px] pr-3 py-2 rounded-[12px] hover:bg-surface transition-colors"
-              >
-                <LogIn size={24} className="text-content-primary" />
-                <span className="font-crm text-body-3 font-bold text-content-primary whitespace-nowrap">
-                  View details
-                </span>
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-[12px] text-content-disabled hover:text-content-subtlest hover:bg-surface transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-content-disabled hover:text-content-subtlest hover:bg-surface transition-colors shrink-0"
+            >
+              <X size={24} />
+            </button>
           </div>
 
           {/* ── Scrollable content ── */}
-          <div className="flex-1 flex flex-col gap-4 overflow-y-auto min-h-0">
+          <div className="bg-surface-white rounded-tl-card rounded-tr-card flex-1 flex flex-col gap-4 overflow-y-auto min-h-0 px-2 pb-4">
 
             {/* Suggested focus */}
             {suggestedTasks.length > 0 && (
@@ -197,7 +188,6 @@ export default function ContactDrawer({ contact, onClose }) {
             </Accordion>
 
           </div>
-        </div>
       </motion.div>
     </>
   )

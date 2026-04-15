@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronDown, Globe, Sparkles, Loader2, Check } from 'lucide-react'
+import { useApp } from '../../context/AppContext'
 
 const REPS = ['Marcus Reynolds', 'Sarah Kim']
 const ACCOUNT_TYPES = ['General Contractor', 'Retail', 'Franchise', 'Corporate', 'Distributor', 'Other']
@@ -119,6 +120,7 @@ function AutoBadge({ show }) {
 }
 
 export default function CreateAccountModal({ isOpen, onClose, onAdd }) {
+  const { showToast } = useApp()
   const [form, setForm] = useState({
     name: '',
     website: '',
@@ -187,6 +189,7 @@ export default function CreateAccountModal({ isOpen, onClose, onAdd }) {
       lastActivity: new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString().split('T')[0],
     })
+    showToast(`Added "${form.name}" account`)
     onClose()
     resetForm()
   }

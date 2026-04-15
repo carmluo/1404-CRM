@@ -21,6 +21,19 @@ export function AppProvider({ children }) {
   )
   const [activeFilters, setActiveFilters] = useState({})
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false)
+  const [toasts, setToasts] = useState([])
+
+  function showToast(message, { onUndo } = {}) {
+    const id = Date.now()
+    setToasts(prev => [...prev, { id, message }])
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, 3000)
+  }
+
+  function dismissToast(id) {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }
 
   function saveTaskForLater(task) {
     setSavedForLaterTasks(prev => {
@@ -78,6 +91,22 @@ export function AppProvider({ children }) {
     setNotes(prev => prev.filter(n => n.id !== noteId))
   }
 
+  function addDocument(oppId, doc) {
+    setOpportunities(prev => prev.map(opp =>
+      opp.id === oppId
+        ? { ...opp, documents: [...(opp.documents || []), doc] }
+        : opp
+    ))
+  }
+
+  function deleteDocument(oppId, docName) {
+    setOpportunities(prev => prev.map(opp =>
+      opp.id === oppId
+        ? { ...opp, documents: (opp.documents || []).filter(d => d.name !== docName) }
+        : opp
+    ))
+  }
+
   function sendEstimateEmail(oppId, estimateKey, emailData) {
     const today = new Date().toISOString().split('T')[0]
     setOpportunities(prev => prev.map(opp => {
@@ -116,8 +145,10 @@ export function AppProvider({ children }) {
       opportunities,
       addOpportunity,
       addEstimate,
+      deleteDocument,
       sendEstimateEmail,
       accounts,
+      addDocument,
       notes,
       addNote,
       togglePinNote,
@@ -126,6 +157,9 @@ export function AppProvider({ children }) {
       setActiveFilters,
       isNotificationDrawerOpen,
       setIsNotificationDrawerOpen,
+      toasts,
+      showToast,
+      dismissToast,
     }}>
       {children}
     </AppContext.Provider>
